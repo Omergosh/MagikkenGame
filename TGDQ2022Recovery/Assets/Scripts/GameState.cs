@@ -1,18 +1,179 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static GameStateConstants;
 
-public class GameState : MonoBehaviour
+public static class GameStateConstants
 {
-    // Start is called before the first frame update
-    void Start()
+    public const int TARGET_FRAMES_PER_SECOND = 60;
+    public const int UNITY_TO_GAME_DISTANCE_MULTIPLIER = 100;
+
+    public const int GRAVITY = 3;
+    public const int FRICTION = 5;
+
+    public const int INPUT_LEFT = (1 << 0);
+    public const int INPUT_RIGHT = (1 << 1);
+    public const int INPUT_UP = (1 << 2);
+    public const int INPUT_DOWN = (1 << 3);
+    public const int INPUT_A = (1 << 4);
+    public const int INPUT_B = (1 << 5);
+}
+
+public enum BattlePhase
+{
+    DUEL_PHASE,
+    FIELD_PHASE
+}
+
+[Serializable]
+public struct GameState
+{
+    //public Player player1;
+    //public Player player2;
+    public Player[] players;
+    public List<ProjectileDuel> projectilesDuel;
+    public List<ProjectileField> projectilesField;
+    public List<Portal> portals;
+
+    public int stageRadius;
+    public int currentAxisOffset;
+
+    public BattlePhase currentPhase;
+
+    public GameState(int stageRadiusInUnityUnits)
     {
-        
+        players = new Player[2];
+        players[0] = new Player(0);
+        players[1] = new Player(1);
+
+        projectilesDuel = new List<ProjectileDuel>();
+        projectilesField = new List<ProjectileField>();
+        portals = new List<Portal>();
+
+        currentPhase = BattlePhase.DUEL_PHASE;
+
+        stageRadius = stageRadiusInUnityUnits * GameStateConstants.UNITY_TO_GAME_DISTANCE_MULTIPLIER;
+        currentAxisOffset = 0;
+    }
+    public void AdvanceFrame(long[] inputs)
+    {
+        if(currentPhase == BattlePhase.DUEL_PHASE) { UpdateDuelPhase(inputs); }
+        else { UpdateFieldPhase(inputs); }
+    }
+    
+    #region Duel Phase
+    private void UpdateDuelPhase(long[] inputs)
+    {
+        // Inputs
+        for (int p = 0; p < inputs.Length; p++)
+        {
+
+            if ((inputs[p] & INPUT_LEFT) != 0 && (inputs[p] & INPUT_RIGHT) == 0)
+            {
+                players[p].DuelMove(false);
+                //players[p].velX = -Player.moveSpeed;
+            }
+            else if ((inputs[p] & INPUT_RIGHT) != 0 && (inputs[p] & INPUT_LEFT) == 0)
+            {
+                players[p].DuelMove(true);
+                //players[p].velX = Player.moveSpeed;
+            }
+            else
+            {
+                players[p].notAccelerating = true;
+                players[p].currentState = PlayerAnimState.IDLE;
+            }
+
+            // If player is on the ground
+            if (players[p].posY <= 0)
+            {
+                if ((inputs[p] & INPUT_UP) != 0)
+                {
+                    players[p].velY = Player.jumpPower;
+                }
+            }
+        }
+
+        // Movement
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            players[p].decayCounter++;
+
+            players[p].posX += players[p].velX;
+            players[p].posY += players[p].velY;
+
+
+            // Boundaries / Walls / Floors / Ceiling
+            if (players[p].posY <= 0)
+            {
+                players[p].posY = 0;
+                players[p].velY = 0;
+            }
+            if(players[p].posX <= -stageRadius)
+            {
+                players[p].posX = -stageRadius;
+                players[p].velX = 0;
+            }
+            if (players[p].posX >= stageRadius)
+            {
+                players[p].posX = stageRadius;
+                players[p].velX = 0;
+            }
+
+            // Decay
+            if (players[p].velX != 0 && players[p].IsOnGround && players[p].notAccelerating)
+            {
+                if (players[p].decayCounter % players[p].decayX == 0)
+                {
+                    players[p].velX = (int)
+                        Mathf.MoveTowards(
+                        players[p].velX,
+                        0f,
+                        FRICTION
+                        );
+                }
+            }
+            if (players[p].posY > 0)
+            {
+                if (players[p].decayCounter % players[p].decayY == 0)
+                {
+                    players[p].velY -= GRAVITY;
+                }
+            }
+        }
+
+        // Attacks
+
+        // Last state updates
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            if (players[p].posY > 0) { players[p].currentState = PlayerAnimState.IN_AIR; }
+            else { UpdatePlayerFacing(p); }
+        }
     }
 
-    // Update is called once per frame
-    void Update()
+    public void UpdatePlayerFacing(int pIndex)
     {
-        
+        int enemyIndex = (pIndex == 0) ? 1 : 0;
+        if (players[enemyIndex].posX > players[pIndex].posX) { players[pIndex].facingRight = true; }
+        else if (players[enemyIndex].posX < players[pIndex].posX) { players[pIndex].facingRight = false; }
     }
+
+    #endregion
+
+    #region Field Phase
+    private void UpdateFieldPhase(long[] inputs)
+    {
+        Debug.Log("Field phase.");
+    }
+    #endregion
+
+    public void ChangePhase()
+    {
+        if (currentPhase == BattlePhase.DUEL_PHASE) { currentPhase = BattlePhase.FIELD_PHASE; }
+        else if (currentPhase == BattlePhase.FIELD_PHASE) { currentPhase = BattlePhase.DUEL_PHASE; }
+    }
+
+    private void ReadInputs() { }
 }
