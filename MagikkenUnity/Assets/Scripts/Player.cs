@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 public enum PlayerAnimState
 {
@@ -34,9 +35,13 @@ public struct Player
     public const int decayXDefault = 3;
     public const int decayXWalkBack = 1;
     public const int decayYDefault = 3;
+    public const int decayZDefault = 3;
 
     public const int hurtboxOriginHeight = 30;
     public const int hurtboxOriginRadius = 60;
+
+    // Constants (Field-specific)
+    public const int fieldMoveSpeed = 12;
 
     // Frame data (hardcoded, universal)
     public const int projectileFireStartup = 5;
@@ -63,20 +68,27 @@ public struct Player
     public int currentAnimFrame;
 
     public bool facingRight;
-    public int posX;
-    public int posY;
+    //public int posX;
+    //public int posY;
     public int posSwivel;
-    public int velX;
-    public int velY;
+    //public int velX;
+    //public int velY;
 
     public bool notAccelerating;
     public int decayX;
     public int decayY;
+    public int decayZ;
     public int decayCounter;
 
     public int projectileCooldown;
     public int portalCooldown;
     public int activePortalCount;
+
+    // Omer realizes Unity has had integer-based vectors all along WTF
+    public Vector2Int position;
+    public Vector2Int velocity;
+    public int positionFieldZ;
+    public int velocityFieldZ;
 
     public Player(int newPlayerIndex)
     {
@@ -86,14 +98,19 @@ public struct Player
         currentAnimFrame = 0;
 
         facingRight = playerIndex == 0 ? true : false;
-        posX = playerIndex == 0 ? -200 : 200;
-        posY = 0;
+        position = new Vector2Int();
+        position.x = playerIndex == 0 ? -200 : 200;
+        position.y = 0;
         posSwivel = 0;
-        velX = playerIndex == 0 ? -20 : 20;
-        velY = 0;
+        positionFieldZ = 0;
+        velocity = new Vector2Int();
+        velocity.x = playerIndex == 0 ? -20 : 20;
+        velocity.y = 0;
+        velocityFieldZ = 0;
         notAccelerating = true;
         decayX = decayXDefault;
         decayY = decayYDefault;
+        decayZ = decayZDefault;
         decayCounter = 0;
 
         projectileCooldown = 0;
@@ -102,10 +119,56 @@ public struct Player
         activePortalCount = 0;
     }
 
+    public void FieldMove(Vector2Int inputVector)
+    {
+        if (inputVector == Vector2Int.zero)
+        {
+            notAccelerating = true;
+            velocity.x = 0;
+            velocityFieldZ = 0;
+        }
+        else
+        {
+            notAccelerating = false;
+            if (inputVector.x == 0)
+            {
+                velocity.x = 0;
+            }
+            else
+            {
+                decayX = decayXDefault;
+                if (inputVector.x > 0)
+                {
+                    velocity.x = fieldMoveSpeed;
+                }
+                else if (inputVector.x < 0)
+                {
+                    velocity.x = -fieldMoveSpeed;
+                }
+            }
+
+            if (inputVector.y == 0)
+            {
+                velocityFieldZ = 0;
+            }
+            else
+            {
+                if (inputVector.y > 0)
+                {
+                    velocityFieldZ = fieldMoveSpeed;
+                }
+                else if (inputVector.y < 0)
+                {
+                    velocityFieldZ = -fieldMoveSpeed;
+                }
+            }
+        }
+    }
+
     public void DuelMove(bool movingRight)
     {
         notAccelerating = false;
-        if (posY > 0)
+        if (position.y > 0)
         {
             // Moving in midair
             AccelerateX(
@@ -137,31 +200,42 @@ public struct Player
     // Helper methods / properties
     public void AccelerateX(int targetVelX, int accelX = 1)
     {
-        if (targetVelX > 0 && targetVelX > velX)
+        if (targetVelX > 0 && targetVelX > velocity.x)
         {
-            if (velX < targetVelX)
+            if (velocity.x < targetVelX)
             {
-                velX += accelX;
-                if (velX > targetVelX)
+                velocity.x += accelX;
+                if (velocity.x > targetVelX)
                 {
-                    velX = targetVelX;
+                    velocity.x = targetVelX;
                 }
             }
         }
-        else if(targetVelX < 0 && targetVelX < velX)
+        else if(targetVelX < 0 && targetVelX < velocity.x)
         {
-            if (velX > targetVelX)
+            if (velocity.x > targetVelX)
             {
-                velX -= accelX;
-                if (velX < targetVelX)
+                velocity.x -= accelX;
+                if (velocity.x < targetVelX)
                 {
-                    velX = targetVelX;
+                    velocity.x = targetVelX;
                 }
             }
         }
     }
 
+    public bool FieldCheckOutOfBounds(int stageRadius)
+    {
+        return ((position.x * position.x) + (positionFieldZ * positionFieldZ)) > (stageRadius * stageRadius);
+    }
+
+    public void FieldPullTowardsOrigin(int pullAmount = 1)
+    {
+        position.x = (Math.Abs(position.x) - pullAmount) * Math.Sign(position.x);
+        positionFieldZ = (Math.Abs(positionFieldZ) - pullAmount) * Math.Sign(positionFieldZ);
+    }
+
 
     public int FacingMultiplier { get { return facingRight ? 1 : -1; } }
-    public bool IsOnGround { get { return posY <= 0; } }
+    public bool IsOnGround { get { return position.y <= 0; } }
 }

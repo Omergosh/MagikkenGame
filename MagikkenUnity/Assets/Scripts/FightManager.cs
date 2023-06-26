@@ -79,9 +79,10 @@ public class FightManager : MonoBehaviour
     private void UpdateModels()
     {
         p1Model.transform.position = new Vector3(
-            gameState.players[0].posX / 100f,
-            (gameState.players[0].posY / 100f) + stageFloorOffset,
-            p1Model.transform.position.z
+            gameState.players[0].position.x / 100f,
+            (gameState.players[0].position.y / 100f) + stageFloorOffset,
+            gameState.players[0].positionFieldZ / 100f
+            //p1Model.transform.position.z
             );
 
         p1Model.transform.localScale = new Vector3(
@@ -91,9 +92,10 @@ public class FightManager : MonoBehaviour
             );
 
         p2Model.transform.position = new Vector3(
-            gameState.players[1].posX / 100f,
-            (gameState.players[1].posY / 100f) + stageFloorOffset,
-            p2Model.transform.position.z
+            gameState.players[1].position.x / 100f,
+            (gameState.players[1].position.y / 100f) + stageFloorOffset,
+            gameState.players[1].positionFieldZ / 100f
+            //p2Model.transform.position.z
             );
 
         p2Model.transform.localScale = new Vector3(
