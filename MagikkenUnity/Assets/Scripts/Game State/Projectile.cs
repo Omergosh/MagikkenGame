@@ -6,7 +6,7 @@ using UnityEngine;
 [Serializable]
 public struct ProjectileDuel
 {
-    // Constatns
+    // Constants
     public const int damage = 3;
     public const int speed = 5;
     public const int hitCircleRadius = 10;

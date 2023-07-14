@@ -1,3 +1,4 @@
+using FixMath.NET;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -34,9 +35,8 @@ public struct GameState
     public Player[] players;
     public List<ProjectileDuel> projectilesDuel; // Erased during transition to Field Phase.
     public List<ProjectileField> projectilesField; // Erased during transition to Duel Phase.
-    public List<Portal> portals;
 
-    public int stageRadius;
+    public Fix64 stageRadius;
     public int currentAxisOffset;
 
     public BattlePhase currentPhase;
@@ -49,31 +49,32 @@ public struct GameState
 
         projectilesDuel = new List<ProjectileDuel>();
         projectilesField = new List<ProjectileField>();
-        portals = new List<Portal>();
 
         currentPhase = BattlePhase.DUEL_PHASE;
 
-        stageRadius = stageRadiusInUnityUnits * GameStateConstants.UNITY_TO_GAME_DISTANCE_MULTIPLIER;
+        stageRadius = new Fix64(stageRadiusInUnityUnits * GameStateConstants.UNITY_TO_GAME_DISTANCE_MULTIPLIER);
         currentAxisOffset = 0;
     }
-    public void AdvanceFrame(long[] inputs)
+    public void AdvanceFrame(InputSnapshot[] inputs)
     {
         if(currentPhase == BattlePhase.DUEL_PHASE) { UpdateDuelPhase(inputs); }
         else { UpdateFieldPhase(inputs); }
     }
     
     #region Duel Phase
-    private void UpdateDuelPhase(long[] inputs)
+    private void UpdateDuelPhase(InputSnapshot[] inputs)
     {
+
         // Inputs
         for (int p = 0; p < inputs.Length; p++)
         {
+            long buttonInputs = inputs[p].buttonValues;
 
-            if ((inputs[p] & INPUT_LEFT) != 0 && (inputs[p] & INPUT_RIGHT) == 0)
+            if ((buttonInputs & INPUT_LEFT) != 0 && (buttonInputs & INPUT_RIGHT) == 0)
             {
                 players[p].DuelMove(false);
             }
-            else if ((inputs[p] & INPUT_RIGHT) != 0 && (inputs[p] & INPUT_LEFT) == 0)
+            else if ((buttonInputs & INPUT_RIGHT) != 0 && (buttonInputs & INPUT_LEFT) == 0)
             {
                 players[p].DuelMove(true);
             }
@@ -84,14 +85,18 @@ public struct GameState
             }
 
             // If player is on the ground
-            if (players[p].position.y <= 0)
+            if (players[p].position.y <= Fix64.Zero)
             {
-                if ((inputs[p] & INPUT_UP) != 0)
+                if ((buttonInputs & INPUT_UP) != 0)
                 {
-                    players[p].velocity.y = Player.jumpPower;
+                    players[p].velocity.y = (Fix64)Player.jumpPower;
                 }
             }
         }
+
+        // Animation state changes, starting attacks/spells, etc.
+
+        // Character physics
 
         // Movement
         for (int p = 0; p < inputs.Length; p++)
@@ -103,50 +108,43 @@ public struct GameState
 
 
             // Boundaries / Walls / Floors / Ceiling
-            if (players[p].position.y <= 0)
+            if (players[p].position.y <= Fix64.Zero)
             {
-                players[p].position.y = 0;
-                players[p].velocity.y = 0;
+                players[p].position.y = Fix64.Zero;
+                players[p].velocity.y = Fix64.Zero;
             }
             if(players[p].position.x <= -stageRadius)
             {
                 players[p].position.x = -stageRadius;
-                players[p].velocity.x = 0;
+                players[p].velocity.x = Fix64.Zero;
             }
             if (players[p].position.x >= stageRadius)
             {
                 players[p].position.x = stageRadius;
-                players[p].velocity.x = 0;
+                players[p].velocity.x = Fix64.Zero;
             }
 
             // Decay
-            if (players[p].velocity.x != 0 && players[p].IsOnGround && players[p].notAccelerating)
+            if (players[p].velocity.x != Fix64.Zero && players[p].IsOnGround && players[p].notAccelerating)
             {
-                if (players[p].decayCounter % players[p].decayX == 0)
-                {
-                    players[p].velocity.x = (int)
-                        Mathf.MoveTowards(
-                        players[p].velocity.x,
-                        0f,
-                        FRICTION
-                        );
-                }
+                players[p].velocity.x = Fix64.Zero;
             }
-            if (players[p].position.y > 0)
+            if (players[p].position.y > Fix64.Zero)
             {
                 if (players[p].decayCounter % players[p].decayY == 0)
                 {
-                    players[p].velocity.y -= GRAVITY;
+                    players[p].velocity.y -= (Fix64)GRAVITY;
                 }
             }
         }
 
-        // Attacks
+        // Wall collisions
 
-        // Last state updates
+        // Reaction state updates
         for (int p = 0; p < inputs.Length; p++)
         {
-            if (players[p].position.y > 0) { players[p].currentState = PlayerAnimState.IN_AIR; }
+            // If character is in a neutral state, they automatically turn to face their opponent.
+            if (players[p].position.y > Fix64.Zero) { players[p].currentState = PlayerAnimState.IN_AIR; }
             else { UpdatePlayerFacing(p); }
         }
     }
@@ -161,39 +159,46 @@ public struct GameState
     #endregion
 
     #region Field Phase
-    private void UpdateFieldPhase(long[] inputs)
+    private void UpdateFieldPhase(InputSnapshot[] inputs)
     {
         //Debug.Log("Field phase.");
 
         // Inputs
+        // Animation state changes, starting attacks/spells, etc.
+        // Character physics
+        // Wall collisions
+        // Reaction state updates
+
+        // Inputs
         for (int p = 0; p < inputs.Length; p++)
         {
-            Vector2Int moveInputs = new Vector2Int();
-            if ((inputs[p] & INPUT_LEFT) != 0 && (inputs[p] & INPUT_RIGHT) == 0)
+            long buttonInputs = inputs[p].buttonValues;
+            FixVector2 moveInputs = new FixVector2();
+            if ((buttonInputs & INPUT_LEFT) != 0 && (buttonInputs & INPUT_RIGHT) == 0)
             {
-                moveInputs.x = -1;
+                moveInputs.x = -Fix64.One;
             }
-            else if ((inputs[p] & INPUT_RIGHT) != 0 && (inputs[p] & INPUT_LEFT) == 0)
+            else if ((buttonInputs & INPUT_RIGHT) != 0 && (buttonInputs & INPUT_LEFT) == 0)
             {
-                moveInputs.x = 1;
+                moveInputs.x = Fix64.One;
             }
             else
             {
-                moveInputs.x = 0;
+                moveInputs.x = Fix64.Zero;
             }
-            if ((inputs[p] & INPUT_DOWN) != 0 && (inputs[p] & INPUT_UP) == 0)
+            if ((buttonInputs & INPUT_DOWN) != 0 && (buttonInputs & INPUT_UP) == 0)
             {
                 //Debug.Log("Field down input detected");
-                moveInputs.y = -1;
+                moveInputs.y = -Fix64.One;
             }
-            else if ((inputs[p] & INPUT_UP) != 0 && (inputs[p] & INPUT_DOWN) == 0)
+            else if ((buttonInputs & INPUT_UP) != 0 && (buttonInputs & INPUT_DOWN) == 0)
             {
                 //Debug.Log("Field up input detected");
-                moveInputs.y = 1;
+                moveInputs.y = Fix64.One;
             }
             else
             {
-                moveInputs.y = 0;
+                moveInputs.y = Fix64.Zero;
             }
             players[p].FieldMove(moveInputs);
             //Debug.Log("move inputs:");
@@ -201,7 +206,7 @@ public struct GameState
             //Debug.Log(players[p].velocityFieldZ);
 
             // If player is on the ground
-            if (players[p].position.y <= 0)
+            if (players[p].position.y <= Fix64.Zero)
             {
                 // No ability to jump yet
             }
@@ -218,14 +223,14 @@ public struct GameState
 
 
             // Boundaries / Walls / Floors / Ceiling
-            if (players[p].position.y <= 0)
+            if (players[p].position.y <= Fix64.Zero)
             {
-                players[p].position.y = 0;
-                players[p].velocity.y = 0;
+                players[p].position.y = Fix64.Zero;
+                players[p].velocity.y = Fix64.Zero;
             }
             while (players[p].FieldCheckOutOfBounds(stageRadius))
             {
-                players[p].FieldPullTowardsOrigin();
+                players[p].FieldPullTowardsOrigin(Fix64.One);
             }
             //if (players[p].position.x <= -stageRadius)
             //{
@@ -251,11 +256,11 @@ public struct GameState
             //            );
             //    }
             //}
-            if (players[p].position.y > 0)
+            if (players[p].position.y > Fix64.Zero)
             {
                 if (players[p].decayCounter % players[p].decayY == 0)
                 {
-                    players[p].velocity.y -= GRAVITY;
+                    players[p].velocity.y -= (Fix64)GRAVITY;
                 }
             }
         }

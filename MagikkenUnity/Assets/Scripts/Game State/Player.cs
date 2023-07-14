@@ -1,3 +1,4 @@
+using FixMath.NET;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -30,7 +31,7 @@ public struct Player
     public const int moveSpeed = 20;
     public const int moveSpeedBack = 15;
     public const int moveSpeedAir = 15;
-    public const int moveAccelAir = 3;
+    public const int moveAccelAir = 1;
     public const int jumpPower = 25;
     public const int decayXDefault = 3;
     public const int decayXWalkBack = 1;
@@ -85,10 +86,10 @@ public struct Player
     public int activePortalCount;
 
     // Omer realizes Unity has had integer-based vectors all along WTF
-    public Vector2Int position;
-    public Vector2Int velocity;
-    public int positionFieldZ;
-    public int velocityFieldZ;
+    public FixVector2 position;
+    public FixVector2 velocity;
+    public Fix64 positionFieldZ;
+    public Fix64 velocityFieldZ;
 
     public Player(int newPlayerIndex)
     {
@@ -98,15 +99,15 @@ public struct Player
         currentAnimFrame = 0;
 
         facingRight = playerIndex == 0 ? true : false;
-        position = new Vector2Int();
-        position.x = playerIndex == 0 ? -200 : 200;
-        position.y = 0;
+        position = new FixVector2();
+        position.x = new Fix64(playerIndex == 0 ? -200 : 200);
+        position.y = Fix64.Zero;
         posSwivel = 0;
-        positionFieldZ = 0;
-        velocity = new Vector2Int();
-        velocity.x = playerIndex == 0 ? -20 : 20;
-        velocity.y = 0;
-        velocityFieldZ = 0;
+        positionFieldZ = Fix64.Zero;
+        velocity = new FixVector2();
+        velocity.x = new Fix64(playerIndex == 0 ? -20 : 20);
+        velocity.y = Fix64.Zero;
+        velocityFieldZ = Fix64.Zero;
         notAccelerating = true;
         decayX = decayXDefault;
         decayY = decayYDefault;
@@ -119,47 +120,47 @@ public struct Player
         activePortalCount = 0;
     }
 
-    public void FieldMove(Vector2Int inputVector)
+    public void FieldMove(FixVector2 inputVector)
     {
-        if (inputVector == Vector2Int.zero)
+        if (inputVector == new FixVector2())
         {
             notAccelerating = true;
-            velocity.x = 0;
-            velocityFieldZ = 0;
+            velocity.x = Fix64.Zero;
+            velocityFieldZ = Fix64.Zero;
         }
         else
         {
             notAccelerating = false;
-            if (inputVector.x == 0)
+            if (inputVector.x == Fix64.Zero)
             {
-                velocity.x = 0;
+                velocity.x = Fix64.Zero;
             }
             else
             {
                 decayX = decayXDefault;
-                if (inputVector.x > 0)
+                if (inputVector.x > Fix64.Zero)
                 {
-                    velocity.x = fieldMoveSpeed;
+                    velocity.x = new Fix64(fieldMoveSpeed);
                 }
-                else if (inputVector.x < 0)
+                else if (inputVector.x < Fix64.Zero)
                 {
-                    velocity.x = -fieldMoveSpeed;
+                    velocity.x = -new Fix64(fieldMoveSpeed);
                 }
             }
 
-            if (inputVector.y == 0)
+            if (inputVector.y == Fix64.Zero)
             {
-                velocityFieldZ = 0;
+                velocityFieldZ = Fix64.Zero;
             }
             else
             {
-                if (inputVector.y > 0)
+                if (inputVector.y > Fix64.Zero)
                 {
-                    velocityFieldZ = fieldMoveSpeed;
+                    velocityFieldZ = (Fix64)fieldMoveSpeed;
                 }
-                else if (inputVector.y < 0)
+                else if (inputVector.y < Fix64.Zero)
                 {
-                    velocityFieldZ = -fieldMoveSpeed;
+                    velocityFieldZ = -(Fix64)fieldMoveSpeed;
                 }
             }
         }
@@ -168,11 +169,11 @@ public struct Player
     public void DuelMove(bool movingRight)
     {
         notAccelerating = false;
-        if (position.y > 0)
+        if (position.y > Fix64.Zero)
         {
             // Moving in midair
             AccelerateX(
-                (movingRight ? 1 : -1) * (moveSpeedAir),
+                (Fix64)((movingRight ? 1 : -1) * (moveSpeedAir)),
                 moveAccelAir
                 );
             //velX = (movingRight ? 1 : -1) * (moveSpeedAir);
@@ -184,13 +185,13 @@ public struct Player
             if (movingRight == facingRight)
             {
                 // Moving in the direction the player is facing
-                AccelerateX(FacingMultiplier * (moveSpeed));
+                AccelerateX((Fix64)(FacingMultiplier * (moveSpeed)));
                 //velX = FacingMultiplier * (moveSpeed);
                 decayX = decayXDefault;
             }
             else
             {
-                AccelerateX(FacingMultiplier * (-moveSpeedBack / 2), 100);
+                AccelerateX((Fix64)(FacingMultiplier * (-moveSpeedBack / 2)), 100);
                 //velX = FacingMultiplier * (-moveSpeedBack / 2);
                 decayX = decayXWalkBack;
             }
@@ -198,24 +199,24 @@ public struct Player
     }
 
     // Helper methods / properties
-    public void AccelerateX(int targetVelX, int accelX = 1)
+    public void AccelerateX(Fix64 targetVelX, int accelX = 1)
     {
-        if (targetVelX > 0 && targetVelX > velocity.x)
+        if (targetVelX > Fix64.Zero && targetVelX > velocity.x)
         {
             if (velocity.x < targetVelX)
             {
-                velocity.x += accelX;
+                velocity.x += (Fix64)accelX;
                 if (velocity.x > targetVelX)
                 {
                     velocity.x = targetVelX;
                 }
             }
         }
-        else if(targetVelX < 0 && targetVelX < velocity.x)
+        else if(targetVelX < Fix64.Zero && targetVelX < velocity.x)
         {
             if (velocity.x > targetVelX)
             {
-                velocity.x -= accelX;
+                velocity.x -= (Fix64)accelX;
                 if (velocity.x < targetVelX)
                 {
                     velocity.x = targetVelX;
@@ -224,18 +225,18 @@ public struct Player
         }
     }
 
-    public bool FieldCheckOutOfBounds(int stageRadius)
+    public bool FieldCheckOutOfBounds(Fix64 stageRadius)
     {
         return ((position.x * position.x) + (positionFieldZ * positionFieldZ)) > (stageRadius * stageRadius);
     }
 
-    public void FieldPullTowardsOrigin(int pullAmount = 1)
+    public void FieldPullTowardsOrigin(Fix64 pullAmount)
     {
-        position.x = (Math.Abs(position.x) - pullAmount) * Math.Sign(position.x);
-        positionFieldZ = (Math.Abs(positionFieldZ) - pullAmount) * Math.Sign(positionFieldZ);
+        position.x = (Fix64.Abs(position.x) - pullAmount) * (Fix64)Fix64.Sign(position.x);
+        positionFieldZ = (Fix64.Abs(positionFieldZ) - pullAmount) * (Fix64)Fix64.Sign(positionFieldZ);
     }
 
 
     public int FacingMultiplier { get { return facingRight ? 1 : -1; } }
-    public bool IsOnGround { get { return position.y <= 0; } }
+    public bool IsOnGround { get { return position.y <= Fix64.Zero; } }
 }

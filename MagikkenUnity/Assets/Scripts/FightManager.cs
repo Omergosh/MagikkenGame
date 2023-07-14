@@ -12,7 +12,7 @@ public class FightManager : MonoBehaviour
 
     public GameState gameState;
 
-    long[] currentInputs;
+    InputSnapshot[] currentInputs;
     bool usedCurrentInputs = false;
 
     public float stageFloorOffset = -2f;
@@ -31,7 +31,7 @@ public class FightManager : MonoBehaviour
     void Start()
     {
         gameState = new GameState(6);
-        currentInputs = new long[2];
+        currentInputs = new InputSnapshot[2];
 
         Debug.Log("Press any key to start.");
     }
@@ -79,9 +79,9 @@ public class FightManager : MonoBehaviour
     private void UpdateModels()
     {
         p1Model.transform.position = new Vector3(
-            gameState.players[0].position.x / 100f,
-            (gameState.players[0].position.y / 100f) + stageFloorOffset,
-            gameState.players[0].positionFieldZ / 100f
+            ((float)gameState.players[0].position.x) / 100f,
+            (((float)gameState.players[0].position.y) / 100f) + stageFloorOffset,
+            ((float)gameState.players[0].positionFieldZ) / 100f
             //p1Model.transform.position.z
             );
 
@@ -92,9 +92,9 @@ public class FightManager : MonoBehaviour
             );
 
         p2Model.transform.position = new Vector3(
-            gameState.players[1].position.x / 100f,
-            (gameState.players[1].position.y / 100f) + stageFloorOffset,
-            gameState.players[1].positionFieldZ / 100f
+            ((float)gameState.players[1].position.x) / 100f,
+            (((float)gameState.players[1].position.y) / 100f) + stageFloorOffset,
+            ((float)gameState.players[1].positionFieldZ) / 100f
             //p2Model.transform.position.z
             );
 
@@ -145,7 +145,7 @@ public class FightManager : MonoBehaviour
                 if (Input.GetKey(KeyCode.P)) { input |= INPUT_B; }
             }
 
-            currentInputs[i] = input;
+            currentInputs[i].buttonValues = input;
         }
 
         // Universal/global/debug commands:
