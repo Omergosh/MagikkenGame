@@ -91,6 +91,7 @@ public class FightManager : MonoBehaviour
             p1Model.transform.localScale.z
             );
 
+
         p2Model.transform.position = new Vector3(
             ((float)gameState.players[1].position.x) / 100f,
             (((float)gameState.players[1].position.y) / 100f) + stageFloorOffset,
@@ -103,6 +104,17 @@ public class FightManager : MonoBehaviour
             p2Model.transform.localScale.y,
             p2Model.transform.localScale.z
             );
+
+        Vector3 p1LookAtTarget = new Vector3(
+            p2Model.transform.position.x,
+            p1Model.transform.position.y,
+            p2Model.transform.position.z);
+        Vector3 p2LookAtTarget = new Vector3(
+            p1Model.transform.position.x,
+            p2Model.transform.position.y,
+            p1Model.transform.position.z);
+        p1Model.transform.LookAt(p1LookAtTarget);
+        p2Model.transform.LookAt(p2LookAtTarget);
     }
 
     private void FixedUpdate()
