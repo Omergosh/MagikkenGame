@@ -1,6 +1,7 @@
 using System;
 using FixMath.NET;
 
+[Serializable]
 public struct FixVector2 : IEquatable<FixVector2>
 {
     public Fix64 x;
@@ -123,4 +124,8 @@ public struct FixVector2 : IEquatable<FixVector2>
     {
         return (this / Magnitude());
     }
+
+    public static readonly FixVector2 Zero = new FixVector2(Fix64.Zero, Fix64.Zero);
+    public static readonly FixVector2 UnitX = new FixVector2(Fix64.One, Fix64.Zero);
+    public static readonly FixVector2 UnitY = new FixVector2(Fix64.Zero, Fix64.One);
 }

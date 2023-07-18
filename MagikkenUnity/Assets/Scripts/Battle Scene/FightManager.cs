@@ -30,7 +30,7 @@ public class FightManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        gameState = new GameState(6);
+        gameState = new GameState(5);
         currentInputs = new InputSnapshot[2];
 
         Debug.Log("Press any key to start.");
@@ -164,7 +164,7 @@ public class FightManager : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Debug.Log("Change phase!");
-            gameState.ChangePhase();
+            gameState.ChangePhase(0);
 
             if (gameState.currentPhase == BattlePhase.FIELD_PHASE)
             {

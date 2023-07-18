@@ -10,8 +10,8 @@ public static class GameStateConstants
     public const int TARGET_FRAMES_PER_SECOND = 60;
     public const int UNITY_TO_GAME_DISTANCE_MULTIPLIER = 100;
 
-    public const int GRAVITY = 3;
-    public const int FRICTION = 5;
+    public const int GRAVITY = 4500;
+    public const int FRICTION = 1200;
 
     public const int INPUT_LEFT = (1 << 0);
     public const int INPUT_RIGHT = (1 << 1);
@@ -30,6 +30,7 @@ public enum BattlePhase
 [Serializable]
 public struct GameState
 {
+    public static Fix64 FIXED_DELTA_TIME = Fix64.One / (Fix64)TARGET_FRAMES_PER_SECOND;
     //public Player player1;
     //public Player player2;
     public Player[] players;
@@ -66,77 +67,114 @@ public struct GameState
     {
 
         // Inputs
+        // Declaration of input/intent for state changes, starting attacks/spells
+        //      (allows for super freezes, cinematics, etc. to be done easier)
+        // Animation state changes, etc.
         for (int p = 0; p < inputs.Length; p++)
         {
-            long buttonInputs = inputs[p].buttonValues;
-
-            if ((buttonInputs & INPUT_LEFT) != 0 && (buttonInputs & INPUT_RIGHT) == 0)
+            PlayerStateContext ctx = new PlayerStateContext() { currentInputs = inputs[p], player = players[p] };
+            players[p].stateMachine.AdvanceFrame(ctx);
+        }
+        // Character physics
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            players[p].position += players[p].velocity * FIXED_DELTA_TIME;
+            if (players[p].position.y > Fix64.Zero)
             {
-                players[p].DuelMove(false);
-            }
-            else if ((buttonInputs & INPUT_RIGHT) != 0 && (buttonInputs & INPUT_LEFT) == 0)
-            {
-                players[p].DuelMove(true);
+                players[p].ApplyGravity();
             }
             else
             {
-                players[p].notAccelerating = true;
-                players[p].currentState = PlayerAnimState.IDLE;
-            }
+                players[p].ApplyFriction();
 
-            // If player is on the ground
-            if (players[p].position.y <= Fix64.Zero)
-            {
-                if ((buttonInputs & INPUT_UP) != 0)
-                {
-                    players[p].velocity.y = (Fix64)Player.jumpPower;
-                }
+                if (players[p].position.y < Fix64.Zero) { players[p].position.y = Fix64.Zero; }
             }
         }
-
-        // Animation state changes, starting attacks/spells, etc.
-
-        // Character physics
-
-        // Movement
+        // Push collisions
+        // Wall collisions
         for (int p = 0; p < inputs.Length; p++)
         {
-            players[p].decayCounter++;
-
-            players[p].position.x += players[p].velocity.x;
-            players[p].position.y += players[p].velocity.y;
-
-
-            // Boundaries / Walls / Floors / Ceiling
-            if (players[p].position.y <= Fix64.Zero)
-            {
-                players[p].position.y = Fix64.Zero;
-                players[p].velocity.y = Fix64.Zero;
-            }
-            if(players[p].position.x <= -stageRadius)
-            {
-                players[p].position.x = -stageRadius;
-                players[p].velocity.x = Fix64.Zero;
-            }
-            if (players[p].position.x >= stageRadius)
-            {
-                players[p].position.x = stageRadius;
-                players[p].velocity.x = Fix64.Zero;
-            }
-
-            // Decay
-            if (players[p].velocity.x != Fix64.Zero && players[p].IsOnGround && players[p].notAccelerating)
-            {
-                players[p].velocity.x = Fix64.Zero;
-            }
-            if (players[p].position.y > Fix64.Zero)
-            {
-                if (players[p].decayCounter % players[p].decayY == 0)
-                {
-                    players[p].velocity.y -= (Fix64)GRAVITY;
-                }
-            }
+            players[p].EnforceStageBounds(stageRadius);
         }
+        // Overlap collisions (push overlapping bodies away from wall, towards centre)
+        // Character attack/hit checks
+        // Reaction state updates
+
+
+        // Old code below //
+
+        // Inputs
+        //for (int p = 0; p < inputs.Length; p++)
+        //{
+        //    long buttonInputs = inputs[p].buttonValues;
+
+        //    if ((buttonInputs & INPUT_LEFT) != 0 && (buttonInputs & INPUT_RIGHT) == 0)
+        //    {
+        //        players[p].DuelMove(false);
+        //    }
+        //    else if ((buttonInputs & INPUT_RIGHT) != 0 && (buttonInputs & INPUT_LEFT) == 0)
+        //    {
+        //        players[p].DuelMove(true);
+        //    }
+        //    else
+        //    {
+        //        players[p].notAccelerating = true;
+        //        players[p].currentState = PlayerAnimState.IDLE;
+        //    }
+
+        //    // If player is on the ground
+        //    if (players[p].position.y <= Fix64.Zero)
+        //    {
+        //        if ((buttonInputs & INPUT_UP) != 0)
+        //        {
+        //            players[p].velocity.y = (Fix64)Player.jumpPower;
+        //        }
+        //    }
+        //}
+
+        //// Animation state changes, starting attacks/spells, etc.
+
+        //// Character physics
+
+        //// Movement
+        //for (int p = 0; p < inputs.Length; p++)
+        //{
+        //    players[p].decayCounter++;
+
+        //    players[p].position.x += players[p].velocity.x;
+        //    players[p].position.y += players[p].velocity.y;
+
+
+        //    // Boundaries / Walls / Floors / Ceiling
+        //    if (players[p].position.y <= Fix64.Zero)
+        //    {
+        //        players[p].position.y = Fix64.Zero;
+        //        players[p].velocity.y = Fix64.Zero;
+        //    }
+        //    if(players[p].position.x <= -stageRadius)
+        //    {
+        //        players[p].position.x = -stageRadius;
+        //        players[p].velocity.x = Fix64.Zero;
+        //    }
+        //    if (players[p].position.x >= stageRadius)
+        //    {
+        //        players[p].position.x = stageRadius;
+        //        players[p].velocity.x = Fix64.Zero;
+        //    }
+
+        //    // Decay
+        //    if (players[p].velocity.x != Fix64.Zero && players[p].IsOnGround && players[p].notAccelerating)
+        //    {
+        //        players[p].velocity.x = Fix64.Zero;
+        //    }
+        //    if (players[p].position.y > Fix64.Zero)
+        //    {
+        //        if (players[p].decayCounter % players[p].decayY == 0)
+        //        {
+        //            players[p].velocity.y -= (Fix64)GRAVITY;
+        //        }
+        //    }
+        //}
 
         // Wall collisions
 
@@ -144,7 +182,7 @@ public struct GameState
         for (int p = 0; p < inputs.Length; p++)
         {
             // If character is in a neutral state, they automatically turn to face their opponent.
-            if (players[p].position.y > Fix64.Zero) { players[p].currentState = PlayerAnimState.IN_AIR; }
+            if (players[p].position.y > Fix64.Zero) {  }
             else { UpdatePlayerFacing(p); }
         }
     }
@@ -169,107 +207,38 @@ public struct GameState
         // Wall collisions
         // Reaction state updates
 
-        // Inputs
-        for (int p = 0; p < inputs.Length; p++)
-        {
-            long buttonInputs = inputs[p].buttonValues;
-            FixVector2 moveInputs = new FixVector2();
-            if ((buttonInputs & INPUT_LEFT) != 0 && (buttonInputs & INPUT_RIGHT) == 0)
-            {
-                moveInputs.x = -Fix64.One;
-            }
-            else if ((buttonInputs & INPUT_RIGHT) != 0 && (buttonInputs & INPUT_LEFT) == 0)
-            {
-                moveInputs.x = Fix64.One;
-            }
-            else
-            {
-                moveInputs.x = Fix64.Zero;
-            }
-            if ((buttonInputs & INPUT_DOWN) != 0 && (buttonInputs & INPUT_UP) == 0)
-            {
-                //Debug.Log("Field down input detected");
-                moveInputs.y = -Fix64.One;
-            }
-            else if ((buttonInputs & INPUT_UP) != 0 && (buttonInputs & INPUT_DOWN) == 0)
-            {
-                //Debug.Log("Field up input detected");
-                moveInputs.y = Fix64.One;
-            }
-            else
-            {
-                moveInputs.y = Fix64.Zero;
-            }
-            players[p].FieldMove(moveInputs);
-            //Debug.Log("move inputs:");
-            //Debug.Log(moveInputs);
-            //Debug.Log(players[p].velocityFieldZ);
 
-            // If player is on the ground
-            if (players[p].position.y <= Fix64.Zero)
-            {
-                // No ability to jump yet
-            }
-        }
+
+        
+        // Old code below //
 
         // Movement
-        for (int p = 0; p < inputs.Length; p++)
-        {
-            players[p].decayCounter++;
+        //for (int p = 0; p < inputs.Length; p++)
+        //{
+        //    players[p].decayCounter++;
 
-            players[p].position.x += players[p].velocity.x;
-            players[p].position.y += players[p].velocity.y;
-            players[p].positionFieldZ += players[p].velocityFieldZ;
+        //    players[p].position.x += players[p].velocity.x;
+        //    players[p].position.y += players[p].velocity.y;
+        //    players[p].positionFieldZ += players[p].velocityFieldZ;
 
 
-            // Boundaries / Walls / Floors / Ceiling
-            if (players[p].position.y <= Fix64.Zero)
-            {
-                players[p].position.y = Fix64.Zero;
-                players[p].velocity.y = Fix64.Zero;
-            }
-            while (players[p].FieldCheckOutOfBounds(stageRadius))
-            {
-                players[p].FieldPullTowardsOrigin(Fix64.One);
-            }
-            //if (players[p].position.x <= -stageRadius)
-            //{
-            //    players[p].position.x = -stageRadius;
-            //    players[p].velocity.x = 0;
-            //}
-            //if (players[p].position.x >= stageRadius)
-            //{
-            //    players[p].position.x = stageRadius;
-            //    players[p].velocity.x = 0;
-            //}
-
-            // Decay
-            //if (players[p].velocity.x != 0 && players[p].IsOnGround && players[p].notAccelerating)
-            //{
-            //    if (players[p].decayCounter % players[p].decayX == 0)
-            //    {
-            //        players[p].velocity.x = (int)
-            //            Mathf.MoveTowards(
-            //            players[p].velocity.x,
-            //            0f,
-            //            FRICTION
-            //            );
-            //    }
-            //}
-            if (players[p].position.y > Fix64.Zero)
-            {
-                if (players[p].decayCounter % players[p].decayY == 0)
-                {
-                    players[p].velocity.y -= (Fix64)GRAVITY;
-                }
-            }
-        }
+        //    // Boundaries / Walls / Floors / Ceiling
+        //    if (players[p].position.y <= Fix64.Zero)
+        //    {
+        //        players[p].position.y = Fix64.Zero;
+        //        players[p].velocity.y = Fix64.Zero;
+        //    }
+        //    while (players[p].FieldCheckOutOfBounds(stageRadius))
+        //    {
+        //        players[p].FieldPullTowardsOrigin(Fix64.One);
+        //    }
+        //}
 
 
     }
     #endregion
 
-    public void ChangePhase()
+    public void ChangePhase(int attackerIndex)
     {
         if (currentPhase == BattlePhase.DUEL_PHASE) { currentPhase = BattlePhase.FIELD_PHASE; }
         else if (currentPhase == BattlePhase.FIELD_PHASE) { currentPhase = BattlePhase.DUEL_PHASE; }
