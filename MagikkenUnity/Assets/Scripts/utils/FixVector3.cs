@@ -1,5 +1,6 @@
 using System;
 using FixMath.NET;
+using UnityEngine;
 
 [Serializable]
 public struct FixVector3 : IEquatable<FixVector3>
@@ -98,6 +99,11 @@ public struct FixVector3 : IEquatable<FixVector3>
     }
     #endregion
 
+    public static explicit operator Vector3(FixVector3 v)
+    {
+        return new Vector3((float)v.x, (float)v.y, (float)v.z);
+    }
+
     /// <summary>
     /// Returns a number indicating the sign of the x component of a FixVector3.
     /// Returns 1 if the value is positive, 0 if is 0, and -1 if it is negative.
@@ -150,7 +156,31 @@ public struct FixVector3 : IEquatable<FixVector3>
 
     public FixVector3 Normalized()
     {
-        return (this / Magnitude());
+        Fix64 magnitude = Magnitude();
+        if (magnitude > Fix64.Zero)
+        {
+            return (this / Magnitude());
+        }
+        else { return FixVector3.Zero; }
+    }
+
+    public FixVector3 RotatedAroundYAxis90DegreesClockwise()
+    {
+        return new FixVector3(y, y, -x);
+    }
+    public FixVector3 RotatedAroundYAxis90DegreesCounterclockwise()
+    {
+        return new FixVector3(-y, y, x);
+    }
+
+    public FixVector3 ProjectOntoDuelPlane(FixVector3 planeForward, FixVector3 planeRight)
+    {
+        // Assumption:  Plane normal is a vector with 0 on the world y axis.
+        //              The plane is perpendicular to the floor.
+
+        // "planeUp" is just the y unit vector. (FixVector3.UnitY) (0, 1, 0)
+
+        return new FixVector3(x,y,z);
     }
 
     public static readonly FixVector3 Zero = new FixVector3(Fix64.Zero, Fix64.Zero, Fix64.Zero);

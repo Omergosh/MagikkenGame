@@ -19,11 +19,23 @@ public struct DuelJump : PlayerState
             return;
         }
 
+        if (context.player.velocity.y <= Fix64.Zero)
+        {
+            context.player.stateMachine.SetState(context, new DuelFall());
+            return;
+        }
+
         //Debug.Log("duel jump update");
     }
 
     public void OnEnd(PlayerStateContext context)
     {
         Debug.Log("duel jump end");
+    }
+
+    public bool OnPhaseShift(PlayerStateContext context)
+    {
+        context.player.stateMachine.SetState(context, new FieldFall());
+        return true;
     }
 }

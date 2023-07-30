@@ -4,10 +4,13 @@ using static GameStateConstants;
 
 public struct DuelMoveBackward : PlayerState
 {
+    Fix64 moveDeadZone;
+
     public void OnStart(PlayerStateContext context)
     {
         Debug.Log("duel movebackward start");
-        context.player.velocity = new FixVector2(-(Fix64)Player.moveSpeed, Fix64.Zero);
+        moveDeadZone = Fix64.One / new Fix64(20);
+        context.player.velocity = new FixVector3(-(Fix64)Player.moveSpeed, Fix64.Zero, Fix64.Zero);
     }
 
     public void OnUpdate(PlayerStateContext context)
@@ -16,15 +19,14 @@ public struct DuelMoveBackward : PlayerState
 
         if (DuelCommonTransitions.CommonJumpTransitions(context)) { return; }
 
-        if ((context.currentInputs.buttonValues & INPUT_LEFT) == 0 &&
-            (context.currentInputs.buttonValues & INPUT_RIGHT) == 0)
+        if (Fix64.Abs(context.currentInputs.moveX) <= moveDeadZone)
         {
-            context.player.velocity = new FixVector2(Fix64.Zero, Fix64.Zero);
+            context.player.velocity = FixVector3.Zero;
             context.player.stateMachine.SetState(context, new DuelIdle());
             return;
         }
 
-        if ((context.currentInputs.buttonValues & INPUT_RIGHT) != 0)
+        if (context.currentInputs.moveX > Fix64.Zero)
         {
             context.player.stateMachine.SetState(context, new DuelMoveForward());
             return;
@@ -33,11 +35,17 @@ public struct DuelMoveBackward : PlayerState
 
         // Actual update logic //
 
-        context.player.velocity = new FixVector2(-(Fix64)Player.moveSpeed, Fix64.Zero);
+        context.player.velocity = new FixVector3(-(Fix64)Player.moveSpeed, Fix64.Zero, Fix64.Zero);
     }
 
     public void OnEnd(PlayerStateContext context)
     {
         Debug.Log("duel movebackward end");
+    }
+
+    public bool OnPhaseShift(PlayerStateContext context)
+    {
+        context.player.stateMachine.SetState(context, new FieldMove());
+        return true;
     }
 }

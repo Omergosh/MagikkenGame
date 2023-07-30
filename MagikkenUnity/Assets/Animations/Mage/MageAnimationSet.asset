@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f484b57f5264dcd4eb99a0b0c7ba9d70, type: 3}
+  m_Name: MageAnimationSet
+  m_EditorClassIdentifier: 
+  duelIdle: MageIdle
+  duelMoveForward: MageMoveForward
+  duelMoveBackward: MageMoveBack
+  duelJump: MageJump
+  duelFall: MageFall
+  fieldIdle: MageIdle
+  fieldMove: MageMoveForward
+  fieldFall: MageFall
+  playerStateAnimations:
+    _serializedList:
+    - Key: DuelIdle
+      Value: MageIdle
+    - Key: DuelMoveForward
+      Value: MageMoveForward
+    - Key: DuelMoveBackward
+      Value: MageMoveBack
+    - Key: DuelJump
+      Value: MageJump
+    - Key: DuelFall
+      Value: MageFall
+    - Key: FieldIdle
+      Value: MageIdle
+    - Key: FieldMove
+      Value: MageMoveForward
+    - Key: FieldFall
+      Value: MageFall

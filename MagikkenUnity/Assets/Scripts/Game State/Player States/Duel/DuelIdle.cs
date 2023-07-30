@@ -4,19 +4,22 @@ using static GameStateConstants;
 
 public struct DuelIdle : PlayerState
 {
+    Fix64 moveDeadZone;
+
     public void OnStart(PlayerStateContext context)
     {
         Debug.Log("duel idle start");
+        moveDeadZone = Fix64.One / new Fix64(20);
     }
 
     public void OnUpdate(PlayerStateContext context)
     {
+
         if (DuelCommonTransitions.CommonJumpTransitions(context)) { return; }
 
-        if ((context.currentInputs.buttonValues & INPUT_LEFT) != 0 ||
-            (context.currentInputs.buttonValues & INPUT_RIGHT) != 0)
+        if (Fix64.Abs(context.currentInputs.moveX) > moveDeadZone)
         {
-            if ((context.currentInputs.buttonValues & INPUT_LEFT) != 0)
+            if (context.currentInputs.moveX < Fix64.Zero)
             {
                 context.player.stateMachine.SetState(context, new DuelMoveBackward());
                 return;
@@ -34,5 +37,11 @@ public struct DuelIdle : PlayerState
     public void OnEnd(PlayerStateContext context)
     {
         Debug.Log("duel idle end");
+    }
+
+    public bool OnPhaseShift(PlayerStateContext context)
+    {
+        context.player.stateMachine.SetState(context, new FieldIdle());
+        return true;
     }
 }

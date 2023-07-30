@@ -73,7 +73,7 @@ public struct GameState
         for (int p = 0; p < inputs.Length; p++)
         {
             PlayerStateContext ctx = new PlayerStateContext() { currentInputs = inputs[p], player = players[p] };
-            players[p].stateMachine.AdvanceFrame(ctx);
+            players[p].stateMachine.AdvanceFrame(ctx, currentPhase);
         }
         // Character physics
         for (int p = 0; p < inputs.Length; p++)
@@ -199,6 +199,44 @@ public struct GameState
     #region Field Phase
     private void UpdateFieldPhase(InputSnapshot[] inputs)
     {
+        // Inputs
+        // Declaration of input/intent for state changes, starting attacks/spells
+        //      (allows for super freezes, cinematics, etc. to be done easier)
+        // Animation state changes, etc.
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            PlayerStateContext ctx = new PlayerStateContext() { currentInputs = inputs[p], player = players[p] };
+            players[p].stateMachine.AdvanceFrame(ctx, currentPhase);
+        }
+        // Character physics
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            players[p].position += players[p].velocity * FIXED_DELTA_TIME;
+            if (players[p].position.y > Fix64.Zero)
+            {
+                players[p].ApplyGravity();
+            }
+            else
+            {
+                players[p].ApplyFriction();
+
+                if (players[p].position.y < Fix64.Zero) { players[p].position.y = Fix64.Zero; }
+            }
+        }
+        // Push collisions
+        // Wall collisions
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            players[p].EnforceStageBounds(stageRadius);
+        }
+        // Overlap collisions (push overlapping bodies away from wall, towards centre)
+        // Character attack/hit checks
+        // Reaction state updates
+
+
+        // (above code copied from Duel Phase)
+
+
         //Debug.Log("Field phase.");
 
         // Inputs
@@ -209,7 +247,7 @@ public struct GameState
 
 
 
-        
+
         // Old code below //
 
         // Movement

@@ -50,8 +50,15 @@ public class Player
 
     public StateMachine stateMachine;
 
-    //public FixVector3 position;
-    //public FixVector3 velocity;
+    // Physics vectors
+    public FixVector3 position;
+    public FixVector3 velocity;
+
+    // Reference 3D vectors for orientation/movement
+    public FixVector3 directionOfOpponent;
+    public FixVector3 directionDuelPlaneForward;
+    //public FixVector3 positionOfOpponent;
+
     // TODO: add helper methods to retrieve the 'effective' 2D vectors to use during the Duel Phase.
 
     // Below this comment is legacy code.                       //
@@ -61,15 +68,8 @@ public class Player
     public int currentAnimFrame;
 
     public bool facingRight;
-    public int posSwivel;
 
     public bool notAccelerating = true;
-
-    // Physics vectors
-    public FixVector2 position;
-    public FixVector2 velocity;
-    public Fix64 positionFieldZ;
-    public Fix64 velocityFieldZ;
 
     public Player(int newPlayerIndex)
     {
@@ -78,15 +78,12 @@ public class Player
         stateMachine.state = new DuelIdle();
 
         facingRight = playerIndex == 0 ? true : false;
-        position = new FixVector2();
+        position = new FixVector3();
         position.x = new Fix64(playerIndex == 0 ? -200 : 200);
         position.y = Fix64.Zero;
-        posSwivel = 0;
-        positionFieldZ = Fix64.Zero;
-        velocity = new FixVector2();
+        velocity = new FixVector3();
         velocity.x = new Fix64(playerIndex == 0 ? -20 : 20);
         velocity.y = Fix64.Zero;
-        velocityFieldZ = Fix64.Zero;
     }
 
 
@@ -112,7 +109,7 @@ public class Player
 
         velocity = Fix64Math.MoveTowards(
             velocity,
-            FixVector2.Zero,
+            FixVector3.Zero,
             (Fix64)GameStateConstants.FRICTION * GameState.FIXED_DELTA_TIME
             );
 
@@ -126,23 +123,37 @@ public class Player
 
     public bool CheckOutOfBounds(Fix64 stageRadius)
     {
-        //FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, position.z);
-        FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, positionFieldZ);
+        FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, position.z);
         return positionExceptY.Magnitude() > stageRadius;
     }
 
     public void PullIntoBounds(Fix64 stageRadius)
     {
-        FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, positionFieldZ);
+        FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, position.z);
         //FixVector3 originExceptY = new FixVector3(Fix64.Zero, position.y, Fix64.Zero);
         position.x *= (stageRadius / positionExceptY.Magnitude());
-        positionFieldZ *= (stageRadius / positionExceptY.Magnitude());
+        position.z *= (stageRadius / positionExceptY.Magnitude());
     }
     #endregion
 
     #region Duel functions
 
 
+
+    public FixVector3 FromDuelToWorldSpace(FixVector3 originalDuelVector)
+    {
+        // Assumption: all reference vectors are normalized.
+
+        FixVector3 convertedWorldVector = originalDuelVector;
+        return convertedWorldVector;
+    }
+
+    public FixVector3 FromWorldToDuelSpace(FixVector3 originalWorldVector)
+    {
+        // Assumption: all reference vectors are normalized.
+        FixVector3 convertedDuelVector = originalWorldVector;
+        return convertedDuelVector;
+    }
 
     public int FacingMultiplier { get { return facingRight ? 1 : -1; } }
     public bool IsOnGround { get { return position.y <= Fix64.Zero; } }

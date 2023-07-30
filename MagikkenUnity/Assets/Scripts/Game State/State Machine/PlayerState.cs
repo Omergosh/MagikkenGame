@@ -5,4 +5,5 @@ public interface PlayerState
     public void OnStart(PlayerStateContext stateContext);
     public void OnUpdate(PlayerStateContext stateContext);
     public void OnEnd(PlayerStateContext stateContext);
+    public bool OnPhaseShift(PlayerStateContext stateContext);
 }
