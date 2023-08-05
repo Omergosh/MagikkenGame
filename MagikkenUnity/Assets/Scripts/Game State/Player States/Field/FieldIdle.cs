@@ -2,19 +2,19 @@ using FixMath.NET;
 using UnityEngine;
 using static GameStateConstants;
 
-public struct FieldIdle : PlayerState
+public class FieldIdle : PlayerState
 {
     Fix64 moveDeadZone;
     FixVector2 moveVector;
 
-    public void OnStart(PlayerStateContext context)
+    public override void OnStart(PlayerStateContext context)
     {
         Debug.Log("field idle start");
         moveVector = new FixVector2();
         moveDeadZone = Fix64.One / new Fix64(20);
     }
 
-    public void OnUpdate(PlayerStateContext context)
+    public override void OnUpdate(PlayerStateContext context)
     {
         // Update variables //
         moveVector.x = context.currentInputs.moveX;
@@ -27,14 +27,16 @@ public struct FieldIdle : PlayerState
             context.player.stateMachine.SetState(context, new FieldMove());
             return;
         }
+
+        FaceOtherPlayer(context);
     }
 
-    public void OnEnd(PlayerStateContext context)
+    public override void OnEnd(PlayerStateContext context)
     {
         Debug.Log("field idle end");
     }
 
-    public bool OnPhaseShift(PlayerStateContext context)
+    public override bool OnPhaseShift(PlayerStateContext context)
     {
         context.player.stateMachine.SetState(context, new DuelIdle());
         return true;

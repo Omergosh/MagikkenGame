@@ -28,17 +28,17 @@ public enum BattlePhase
 }
 
 [Serializable]
-public struct GameState
+public class GameState
 {
     public static Fix64 FIXED_DELTA_TIME = Fix64.One / (Fix64)TARGET_FRAMES_PER_SECOND;
-    //public Player player1;
-    //public Player player2;
     public Player[] players;
     public List<ProjectileDuel> projectilesDuel; // Erased during transition to Field Phase.
     public List<ProjectileField> projectilesField; // Erased during transition to Duel Phase.
 
     public Fix64 stageRadius;
-    public int currentAxisOffset;
+
+    public FixVector3 duelPlaneForward;
+    public FixVector3 duelPlaneRight;
 
     public BattlePhase currentPhase;
 
@@ -54,7 +54,6 @@ public struct GameState
         currentPhase = BattlePhase.DUEL_PHASE;
 
         stageRadius = new Fix64(stageRadiusInUnityUnits * GameStateConstants.UNITY_TO_GAME_DISTANCE_MULTIPLIER);
-        currentAxisOffset = 0;
     }
     public void AdvanceFrame(InputSnapshot[] inputs)
     {
@@ -72,7 +71,11 @@ public struct GameState
         // Animation state changes, etc.
         for (int p = 0; p < inputs.Length; p++)
         {
-            PlayerStateContext ctx = new PlayerStateContext() { currentInputs = inputs[p], player = players[p] };
+            PlayerStateContext ctx = new PlayerStateContext() {
+                currentInputs = inputs[p],
+                player = players[p],
+                gameState = this
+            };
             players[p].stateMachine.AdvanceFrame(ctx, currentPhase);
         }
         // Character physics
@@ -99,84 +102,7 @@ public struct GameState
         // Overlap collisions (push overlapping bodies away from wall, towards centre)
         // Character attack/hit checks
         // Reaction state updates
-
-
-        // Old code below //
-
-        // Inputs
-        //for (int p = 0; p < inputs.Length; p++)
-        //{
-        //    long buttonInputs = inputs[p].buttonValues;
-
-        //    if ((buttonInputs & INPUT_LEFT) != 0 && (buttonInputs & INPUT_RIGHT) == 0)
-        //    {
-        //        players[p].DuelMove(false);
-        //    }
-        //    else if ((buttonInputs & INPUT_RIGHT) != 0 && (buttonInputs & INPUT_LEFT) == 0)
-        //    {
-        //        players[p].DuelMove(true);
-        //    }
-        //    else
-        //    {
-        //        players[p].notAccelerating = true;
-        //        players[p].currentState = PlayerAnimState.IDLE;
-        //    }
-
-        //    // If player is on the ground
-        //    if (players[p].position.y <= Fix64.Zero)
-        //    {
-        //        if ((buttonInputs & INPUT_UP) != 0)
-        //        {
-        //            players[p].velocity.y = (Fix64)Player.jumpPower;
-        //        }
-        //    }
-        //}
-
-        //// Animation state changes, starting attacks/spells, etc.
-
-        //// Character physics
-
-        //// Movement
-        //for (int p = 0; p < inputs.Length; p++)
-        //{
-        //    players[p].decayCounter++;
-
-        //    players[p].position.x += players[p].velocity.x;
-        //    players[p].position.y += players[p].velocity.y;
-
-
-        //    // Boundaries / Walls / Floors / Ceiling
-        //    if (players[p].position.y <= Fix64.Zero)
-        //    {
-        //        players[p].position.y = Fix64.Zero;
-        //        players[p].velocity.y = Fix64.Zero;
-        //    }
-        //    if(players[p].position.x <= -stageRadius)
-        //    {
-        //        players[p].position.x = -stageRadius;
-        //        players[p].velocity.x = Fix64.Zero;
-        //    }
-        //    if (players[p].position.x >= stageRadius)
-        //    {
-        //        players[p].position.x = stageRadius;
-        //        players[p].velocity.x = Fix64.Zero;
-        //    }
-
-        //    // Decay
-        //    if (players[p].velocity.x != Fix64.Zero && players[p].IsOnGround && players[p].notAccelerating)
-        //    {
-        //        players[p].velocity.x = Fix64.Zero;
-        //    }
-        //    if (players[p].position.y > Fix64.Zero)
-        //    {
-        //        if (players[p].decayCounter % players[p].decayY == 0)
-        //        {
-        //            players[p].velocity.y -= (Fix64)GRAVITY;
-        //        }
-        //    }
-        //}
-
-        // Wall collisions
+        // Camera update (axis, etc.) (actually for now just skip this step)
 
         // Reaction state updates
         for (int p = 0; p < inputs.Length; p++)
@@ -205,7 +131,11 @@ public struct GameState
         // Animation state changes, etc.
         for (int p = 0; p < inputs.Length; p++)
         {
-            PlayerStateContext ctx = new PlayerStateContext() { currentInputs = inputs[p], player = players[p] };
+            PlayerStateContext ctx = new PlayerStateContext() {
+                currentInputs = inputs[p],
+                player = players[p],
+                gameState = this
+            };
             players[p].stateMachine.AdvanceFrame(ctx, currentPhase);
         }
         // Character physics
@@ -279,7 +209,19 @@ public struct GameState
     public void ChangePhase(int attackerIndex)
     {
         if (currentPhase == BattlePhase.DUEL_PHASE) { currentPhase = BattlePhase.FIELD_PHASE; }
-        else if (currentPhase == BattlePhase.FIELD_PHASE) { currentPhase = BattlePhase.DUEL_PHASE; }
+        else if (currentPhase == BattlePhase.FIELD_PHASE) {
+            currentPhase = BattlePhase.DUEL_PHASE;
+            CalibrateDuelPlane();
+        }
+    }
+
+    public void CalibrateDuelPlane()
+    {
+        duelPlaneRight = players[1].position - players[0].position;
+        duelPlaneRight.y = Fix64.Zero;
+        duelPlaneRight = duelPlaneRight.Normalized();
+
+        duelPlaneForward = duelPlaneRight.RotatedAroundYAxis90DegreesCounterclockwise();
     }
 
     private void ReadInputs() { }

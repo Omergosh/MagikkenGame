@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager instance { get; private set; }
 
+    public AnimationDataLibrary animationDataLibrary;
+
     private void Awake()
     {
         if (instance != null)

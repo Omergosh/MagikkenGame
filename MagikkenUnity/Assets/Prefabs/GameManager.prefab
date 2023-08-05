@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   playerConfigPrefab: {fileID: 5581629066432291638, guid: 57d116e0a183b104c879788cafad3aa8, type: 3}
+  playerConfigs: []
 --- !u!114 &1137847281738801108
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -135,3 +136,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e21b0c70ad0f7ae488ca35e3d4b01338, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  animationDataLibrary: {fileID: 11400000, guid: dc2a0a31b4a7a9b46ada2d1107c4c745, type: 2}

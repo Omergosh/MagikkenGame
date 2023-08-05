@@ -1,3 +1,4 @@
+using Cinemachine;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +14,7 @@ public class FightManager : MonoBehaviour
     public GameState gameState;
 
     public BattleInputManager battleInputManager;
+    public BattleVisualsManager battleVisualsManager;
     //InputSnapshot[] currentInputs;
     bool usedCurrentInputs = false;
 
@@ -25,6 +27,10 @@ public class FightManager : MonoBehaviour
     //[SerializeField]
     //Animator cameraAnimator;
 
+    [SerializeField] CinemachineVirtualCamera vcamDuel; // toggle on/off
+    [SerializeField] Transform vcamDuelTargetGroup; // rotate on phase shift into Duel
+    [SerializeField] CinemachineVirtualCamera vcamFieldP1; // toggle on/off
+    //[SerializeField] CinemachineVirtualCamera vcamFieldP2; // unused until we add split-screen
 
     // Start is called before the first frame update
     void Start()
@@ -64,11 +70,18 @@ public class FightManager : MonoBehaviour
 
             //if (!usedCurrentInputs)
             //{
-            PollCurrentInputs(); // enables debug command to trigger a phase shift on button press
+            PollDebugInputs(); // enables debug command to trigger a phase shift on button press
             battleInputManager.PollCurrentInputs();
-            UpdateModels();
             //}
+
+            UpdateCameras();
+            if (gameState.currentPhase == BattlePhase.FIELD_PHASE)
+            {
+                battleInputManager.MakeMoveVectorCameraBased();
+            }
         }
+
+        if(battleVisualsManager != null) { battleVisualsManager.UpdateVisuals(); }
     }
 
     private void StartGame()
@@ -77,43 +90,9 @@ public class FightManager : MonoBehaviour
         gamePaused = false;
     }
 
-    private void UpdateModels()
+    private void UpdateCameras()
     {
-        //p1Model.transform.position = new Vector3(
-        //    ((float)gameState.players[0].position.x) / 100f,
-        //    (((float)gameState.players[0].position.y) / 100f) + stageFloorOffset,
-        //    ((float)gameState.players[0].position.z) / 100f
-        //    );
-
-        //p1Model.transform.localScale = new Vector3(
-        //    gameState.players[0].FacingMultiplier,
-        //    p1Model.transform.localScale.y,
-        //    p1Model.transform.localScale.z
-        //    );
-
-
-        //p2Model.transform.position = new Vector3(
-        //    ((float)gameState.players[1].position.x) / 100f,
-        //    (((float)gameState.players[1].position.y) / 100f) + stageFloorOffset,
-        //    ((float)gameState.players[1].position.z) / 100f
-        //    );
-
-        //p2Model.transform.localScale = new Vector3(
-        //    gameState.players[1].FacingMultiplier,
-        //    p2Model.transform.localScale.y,
-        //    p2Model.transform.localScale.z
-        //    );
-
-        //Vector3 p1LookAtTarget = new Vector3(
-        //    p2Model.transform.position.x,
-        //    p1Model.transform.position.y,
-        //    p2Model.transform.position.z);
-        //Vector3 p2LookAtTarget = new Vector3(
-        //    p1Model.transform.position.x,
-        //    p2Model.transform.position.y,
-        //    p1Model.transform.position.z);
-        //p1Model.transform.LookAt(p1LookAtTarget);
-        //p2Model.transform.LookAt(p2LookAtTarget);
+        
     }
 
     private void FixedUpdate()
@@ -131,34 +110,8 @@ public class FightManager : MonoBehaviour
         gamePaused = true;
     }
 
-    void PollCurrentInputs()
+    void PollDebugInputs()
     {
-        //    // Update input data to reflect current inputs.
-        //    for (int i = 0; i < 2; i++)
-        //    {
-        //        long input = 0;
-        //        if (i == 0)
-        //        {
-        //            if (Input.GetKey(KeyCode.A)) { input |= INPUT_LEFT; }
-        //            if (Input.GetKey(KeyCode.D)) { input |= INPUT_RIGHT; }
-        //            if (Input.GetKey(KeyCode.W)) { input |= INPUT_UP; }
-        //            if (Input.GetKey(KeyCode.S)) { input |= INPUT_DOWN; }
-        //            if (Input.GetKey(KeyCode.Z)) { input |= INPUT_A; }
-        //            if (Input.GetKey(KeyCode.X)) { input |= INPUT_B; }
-        //        }
-        //        else
-        //        {
-        //            if (Input.GetKey(KeyCode.LeftArrow)) { input |= INPUT_LEFT; }
-        //            if (Input.GetKey(KeyCode.RightArrow)) { input |= INPUT_RIGHT; }
-        //            if (Input.GetKey(KeyCode.UpArrow)) { input |= INPUT_UP; }
-        //            if (Input.GetKey(KeyCode.DownArrow)) { input |= INPUT_DOWN; }
-        //            if (Input.GetKey(KeyCode.O)) { input |= INPUT_A; }
-        //            if (Input.GetKey(KeyCode.P)) { input |= INPUT_B; }
-        //        }
-
-        //        currentInputs[i].buttonValues = input;
-        //    }
-
         // Universal/global/debug commands:
         if (Input.GetKeyDown(KeyCode.Space))
         {
@@ -169,11 +122,25 @@ public class FightManager : MonoBehaviour
             {
                 //cameraAnimator.Play("CameraSideToTopView");
                 Debug.Log("Change to field view!");
+                vcamDuel.gameObject.SetActive(false);
+                vcamFieldP1.gameObject.SetActive(true);
+                //vcamDuelTargetGroup.rotation.eulerAngles.Set(
+                //    vcamDuelTargetGroup.rotation.eulerAngles.x,
+                //    0f,
+                //    vcamDuelTargetGroup.rotation.eulerAngles.z
+                //    );
             }
             else
             {
                 //cameraAnimator.Play("CameraTopToSideView");
                 Debug.Log("Change to duel view!");
+                vcamDuel.gameObject.SetActive(true);
+                vcamFieldP1.gameObject.SetActive(false);
+                //vcamDuelTargetGroup.rotation.eulerAngles.Set(
+                //    vcamDuelTargetGroup.rotation.eulerAngles.x,
+                //    90f,
+                //    vcamDuelTargetGroup.rotation.eulerAngles.z
+                //    );
             }
         }
     }

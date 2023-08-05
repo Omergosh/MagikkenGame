@@ -38,7 +38,7 @@ public class Player
     public const int fieldJumpPower = 2000;
 
     // Config
-    int playerIndex;
+    public readonly int playerIndex;
 
     //////////////////////////////////////////////////////////////
     //                          State                           //
@@ -55,21 +55,18 @@ public class Player
     public FixVector3 velocity;
 
     // Reference 3D vectors for orientation/movement
+    public FixVector3 directionFacing;
     public FixVector3 directionOfOpponent;
     public FixVector3 directionDuelPlaneForward;
     //public FixVector3 positionOfOpponent;
 
     // TODO: add helper methods to retrieve the 'effective' 2D vectors to use during the Duel Phase.
 
+    //////////////////////////////////////////////////////////////
     // Below this comment is legacy code.                       //
     //////////////////////////////////////////////////////////////
 
-    public PlayerAnimState currentState;
-    public int currentAnimFrame;
-
     public bool facingRight;
-
-    public bool notAccelerating = true;
 
     public Player(int newPlayerIndex)
     {
@@ -84,6 +81,12 @@ public class Player
         velocity = new FixVector3();
         velocity.x = new Fix64(playerIndex == 0 ? -20 : 20);
         velocity.y = Fix64.Zero;
+
+        directionFacing = new FixVector3();
+        directionFacing.x = new Fix64(playerIndex == 0 ? 1 : -1);
+
+        // Debug
+        //directionFacing = new FixVector3(0.5f, 0f, 0.5f).Normalized();
     }
 
 
@@ -157,5 +160,89 @@ public class Player
 
     public int FacingMultiplier { get { return facingRight ? 1 : -1; } }
     public bool IsOnGround { get { return position.y <= Fix64.Zero; } }
+    #endregion
+
+    #region Helper methods
+    public ConvertedHitboxData[] GetHitboxesInFront()
+    {
+        HitboxData[] hitboxesData = stateMachine.GetHitboxes();
+        ConvertedHitboxData[] hitboxesToReturn = new ConvertedHitboxData[hitboxesData.Length];
+
+        //float facingRightMultiplier
+        //if(stateMachine.currentPhase == BattlePhase.DUEL_PHASE) { }
+
+        for (int i = 0; i < hitboxesToReturn.Length; i++)
+        {
+            hitboxesToReturn[i] = new ConvertedHitboxData(hitboxesData[i]);
+        }
+
+
+        return hitboxesToReturn;
+    }
+
+    public ConvertedHitboxData[] GetHitboxesRelative()
+    {
+        HitboxData[] hitboxesData = stateMachine.GetHitboxes();
+        ConvertedHitboxData[] hitboxesToReturn = new ConvertedHitboxData[hitboxesData.Length];
+
+        //float facingRightMultiplier
+        //if(stateMachine.currentPhase == BattlePhase.DUEL_PHASE) { }
+
+        for (int i = 0; i < hitboxesToReturn.Length; i++)
+        {
+            hitboxesToReturn[i] = new ConvertedHitboxData(hitboxesData[i]);
+            hitboxesToReturn[i].position.x *= directionFacing.RotatedAroundYAxis90DegreesClockwise().Magnitude();
+            hitboxesToReturn[i].position.z *= directionFacing.Magnitude();
+        }
+
+
+        return hitboxesToReturn;
+    }
+    
+    public ConvertedHitboxData[] GetHitboxesWorld()
+    {
+        ConvertedHitboxData[] hitboxesToReturn = GetHitboxesRelative();
+
+        FixVector3 playerPositionOffset = position;
+
+        for(int i = 0; i < hitboxesToReturn.Length; i++)
+        {
+            hitboxesToReturn[i].position += playerPositionOffset;
+        }
+
+
+        return hitboxesToReturn;
+    }
+    
+    public FixVector3 forward
+    {
+        get
+        {
+            FixVector3 newForward = directionFacing;
+            newForward.y = Fix64.Zero;
+            return newForward.Normalized();
+        }
+        set
+        {
+            FixVector3 newForward = value;
+            newForward.y = Fix64.Zero;
+            directionFacing = newForward.Normalized();
+        }
+    }
+    public FixVector3 right
+    {
+        get
+        {
+            FixVector3 newRight = directionFacing.RotatedAroundYAxis90DegreesClockwise();
+            newRight.y = Fix64.Zero;
+            return newRight.Normalized();
+        }
+        set
+        {
+            FixVector3 newRight = value;
+            newRight.y = Fix64.Zero;
+            directionFacing = newRight.RotatedAroundYAxis90DegreesCounterclockwise().Normalized();
+        }
+    }
     #endregion
 }

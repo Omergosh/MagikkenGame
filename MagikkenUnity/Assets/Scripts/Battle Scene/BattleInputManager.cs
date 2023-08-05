@@ -1,3 +1,4 @@
+using Cinemachine;
 using FixMath.NET;
 using System;
 using System.Collections;
@@ -19,9 +20,11 @@ public class BattleInputManager : MonoBehaviour
     //[SerializeField]
     //GlobalInputManager mainInputSource;
     [SerializeField]
-    Camera p1Camera;
+    CinemachineVirtualCamera p1Camera;
     [SerializeField]
-    Camera p2Camera;
+    CinemachineVirtualCamera p2Camera;
+
+    public const float directionInputDeadzone = 0.2f;
 
     //InputAction p1MoveAction;
     //InputAction p1AttackAction;
@@ -35,18 +38,6 @@ public class BattleInputManager : MonoBehaviour
 
     public void Initialize()
     {
-        //PlayerInput pi1 = GlobalInputManager.instance.playerConfigs[0].playerInput;
-        //pi1.SwitchCurrentControlScheme("BattleControls");
-        //p1MoveAction = pi1.actions["Move"];
-        //p1MoveAction = pi1.actions["Attack"];
-        //p1MoveAction = pi1.actions["Special"];
-
-        //PlayerInput pi2 = GlobalInputManager.instance.playerConfigs[1].playerInput;
-        //pi2.SwitchCurrentControlScheme("BattleControls");
-        //p2MoveAction = pi2.actions["Move"];
-        //p2MoveAction = pi2.actions["Attack"];
-        //p2MoveAction = pi2.actions["Special"];
-
         foreach (PlayerConfiguration pConfig in GlobalInputManager.instance.playerConfigs)
         {
             pConfig.playerInput.SwitchCurrentActionMap("BattleControls");
@@ -64,18 +55,51 @@ public class BattleInputManager : MonoBehaviour
             currentInputs[pConfig.playerIndex].moveY = (Fix64)pConfig.inputData.rawMoveInput.y;
 
             long input = 0;
+
+            // This block is important for command inputs.
+            // e.g. differentiating between 5A and 8A in Field Phase.
+            if (pConfig.inputData.rawMoveInput.x < -directionInputDeadzone) { input |= INPUT_LEFT; }
+            if (pConfig.inputData.rawMoveInput.x > directionInputDeadzone) { input |= INPUT_RIGHT; }
+            if (pConfig.inputData.rawMoveInput.y < -directionInputDeadzone) { input |= INPUT_DOWN; }
+            if (pConfig.inputData.rawMoveInput.y > directionInputDeadzone) { input |= INPUT_UP; }
+
             if (pConfig.inputData.isDownButtonA) { input |= INPUT_A; }
             if (pConfig.inputData.isDownButtonB) { input |= INPUT_B; }
             currentInputs[pConfig.playerIndex].buttonValues = input;
-
-            //Debug.Log(pConfig.inputData.rawMoveInput);
-            //Debug.Log(pConfig.inputData.isDownButtonA);
-            //Debug.Log(pConfig.inputData.isDownButtonB);
         }
         //Debug.Log(currentInputs);
         //Debug.Log(currentInputs[0]);
         //Debug.Log(currentInputs[0].moveX);
         //Debug.Log(currentInputs[0].buttonValues);
         //Debug.Log(currentInputs[1].buttonValues);
+    }
+
+    public void MakeMoveVectorCameraBased()
+    {
+        Vector3 camForward = p1Camera.transform.forward;
+        camForward.y = 0f;
+        camForward.Normalize();
+        Vector3 camRight = p1Camera.transform.right;
+        camRight.y = 0f;
+        camRight.Normalize();
+
+        foreach (PlayerConfiguration pConfig in GlobalInputManager.instance.playerConfigs)
+        {
+            pConfig.PollInputs();
+
+            Vector3 rawMove = new Vector3(
+                (float)currentInputs[pConfig.playerIndex].moveX,
+                0f,
+                (float)currentInputs[pConfig.playerIndex].moveY
+                );
+
+            Vector3 relativeForwardInput = camForward * (float)currentInputs[pConfig.playerIndex].moveY;
+            Vector3 relativeRightInput = camRight * (float)currentInputs[pConfig.playerIndex].moveX;
+
+            Vector3 convertedMove = relativeForwardInput + relativeRightInput;
+
+            currentInputs[pConfig.playerIndex].moveX = (Fix64)convertedMove.x;
+            currentInputs[pConfig.playerIndex].moveY = (Fix64)convertedMove.z;
+        }
     }
 }

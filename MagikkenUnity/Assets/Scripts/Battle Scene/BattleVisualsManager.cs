@@ -16,16 +16,21 @@ public class BattleVisualsManager : MonoBehaviour
         mageAnimHandlers[0].otherPlayerModel = mageAnimHandlers[1];
         mageAnimHandlers[1].otherPlayerModel = mageAnimHandlers[0];
 
-        for(int i = 0; i < mageAnimHandlers.Count; i++)
+        for (int i = 0; i < mageAnimHandlers.Count; i++)
         {
             mageAnimHandlers[i].playerIndex = i;
         }
-        
+
         fightManager = FindObjectOfType<FightManager>();
     }
 
     // Update is called once per frame
-    void LateUpdate()
+    //void LateUpdate()
+    //{
+    //    UpdateVisuals();
+    //}
+
+    public void UpdateVisuals()
     {
         for (int i = 0; i < mageAnimHandlers.Count; i++)
         {

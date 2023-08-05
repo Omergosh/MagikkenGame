@@ -2,20 +2,20 @@ using FixMath.NET;
 using UnityEngine;
 using static GameStateConstants;
 
-public struct FieldMove : PlayerState
+public class FieldMove : PlayerState
 {
     Fix64 moveDeadZone;
     FixVector2 moveInputVector;
     FixVector3 moveOutputVector;
 
-    public void OnStart(PlayerStateContext context)
+    public override void OnStart(PlayerStateContext context)
     {
         Debug.Log("field move start");
         moveInputVector = new FixVector2();
         moveDeadZone = Fix64.One / new Fix64(20);
     }
 
-    public void OnUpdate(PlayerStateContext context)
+    public override void OnUpdate(PlayerStateContext context)
     {
         // Update variables //
         moveInputVector.x = context.currentInputs.moveX;
@@ -37,14 +37,15 @@ public struct FieldMove : PlayerState
             moveInputVector.y
             );
         context.player.velocity = moveOutputVector * (Fix64)Player.fieldMoveSpeed;
+        context.player.forward = moveOutputVector;
     }
 
-    public void OnEnd(PlayerStateContext context)
+    public override void OnEnd(PlayerStateContext context)
     {
         Debug.Log("field move end");
     }
 
-    public bool OnPhaseShift(PlayerStateContext context)
+    public override bool OnPhaseShift(PlayerStateContext context)
     {
         context.player.stateMachine.SetState(context, new DuelIdle());
         return true;

@@ -2,14 +2,14 @@ using FixMath.NET;
 using UnityEngine;
 using static GameStateConstants;
 
-public struct DuelFall : PlayerState
+public class DuelFall : PlayerState
 {
-    public void OnStart(PlayerStateContext context)
+    public override void OnStart(PlayerStateContext context)
     {
         Debug.Log("duel fall start");
     }
 
-    public void OnUpdate(PlayerStateContext context)
+    public override void OnUpdate(PlayerStateContext context)
     {
         //if(DuelCommonTransitions.Common)
         if (context.player.position.y <= Fix64.Zero)
@@ -21,12 +21,12 @@ public struct DuelFall : PlayerState
         //Debug.Log("duel fall update");
     }
 
-    public void OnEnd(PlayerStateContext context)
+    public override void OnEnd(PlayerStateContext context)
     {
         Debug.Log("duel fall end");
     }
 
-    public bool OnPhaseShift(PlayerStateContext context)
+    public override bool OnPhaseShift(PlayerStateContext context)
     {
         context.player.stateMachine.SetState(context, new FieldFall());
         return true;

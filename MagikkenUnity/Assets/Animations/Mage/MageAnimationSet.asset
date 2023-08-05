@@ -12,14 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f484b57f5264dcd4eb99a0b0c7ba9d70, type: 3}
   m_Name: MageAnimationSet
   m_EditorClassIdentifier: 
-  duelIdle: MageIdle
-  duelMoveForward: MageMoveForward
-  duelMoveBackward: MageMoveBack
-  duelJump: MageJump
-  duelFall: MageFall
-  fieldIdle: MageIdle
-  fieldMove: MageMoveForward
-  fieldFall: MageFall
   playerStateAnimations:
     _serializedList:
     - Key: DuelIdle
@@ -32,6 +24,8 @@ MonoBehaviour:
       Value: MageJump
     - Key: DuelFall
       Value: MageFall
+    - Key: DuelJab
+      Value: MageAttackJab
     - Key: FieldIdle
       Value: MageIdle
     - Key: FieldMove

@@ -5,15 +5,36 @@ using UnityEngine;
 [Serializable]
 public struct FixVector3 : IEquatable<FixVector3>
 {
-    public Fix64 x;
-    public Fix64 y;
-    public Fix64 z;
+    [SerializeField] public Fix64 x;
+    [SerializeField] public Fix64 y;
+    [SerializeField] public Fix64 z;
 
     public FixVector3(Fix64 x, Fix64 y, Fix64 z)
     {
         this.x = x;
         this.y = y;
         this.z = z;
+    }
+    
+    public FixVector3(float x, float y, float z)
+    {
+        this.x = (Fix64)x;
+        this.y = (Fix64)y;
+        this.z = (Fix64)z;
+    }
+
+    public FixVector3(Vector3 v)
+    {
+        x = (Fix64)v.x;
+        y = (Fix64)v.y;
+        z = (Fix64)v.z;
+    }
+
+    public FixVector3(Vector3Int v)
+    {
+        x = (Fix64)v.x;
+        y = (Fix64)v.y;
+        z = (Fix64)v.z;
     }
 
     #region Operator overrides
@@ -166,11 +187,11 @@ public struct FixVector3 : IEquatable<FixVector3>
 
     public FixVector3 RotatedAroundYAxis90DegreesClockwise()
     {
-        return new FixVector3(y, y, -x);
+        return new FixVector3(z, y, -x);
     }
     public FixVector3 RotatedAroundYAxis90DegreesCounterclockwise()
     {
-        return new FixVector3(-y, y, x);
+        return new FixVector3(-z, y, x);
     }
 
     public FixVector3 ProjectOntoDuelPlane(FixVector3 planeForward, FixVector3 planeRight)

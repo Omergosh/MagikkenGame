@@ -5,10 +5,12 @@ using UnityEngine;
 public class MageAnimHandler : MonoBehaviour
 {
     Animator animator;
-    [SerializeField]
-    PlayerAnimationSet animationSet;
+    [SerializeField] PlayerAnimationSet animationSet;
     public MageAnimHandler otherPlayerModel;
+    public PlayerDebugVisuals debugVisuals;
     public int playerIndex;
+
+    public bool displayDebug = false;
 
     private void Awake()
     {
@@ -24,39 +26,48 @@ public class MageAnimHandler : MonoBehaviour
         ((float)gameState.players[playerIndex].position.z) / 100f
         );
 
-        transform.localScale = new Vector3(
-            gameState.players[playerIndex].FacingMultiplier,
-            transform.localScale.y,
-            transform.localScale.z
-            );
+        //transform.localScale = new Vector3(
+        //    gameState.players[playerIndex].FacingMultiplier,
+        //    transform.localScale.y,
+        //    transform.localScale.z
+        //    );
 
         UpdateRotation(in gameState);
         UpdateAnimation(in gameState);
+        if (displayDebug) {
+            debugVisuals.gameObject.SetActive(true);
+            debugVisuals.UpdateBoxes(in gameState);
+        }
+        else
+        {
+            debugVisuals.gameObject.SetActive(false);
+        }
+        
     }
 
     public void UpdateRotation(in GameState gameState)
     {
-        string playerStateName = gameState.players[playerIndex].stateMachine.state.GetType().Name;
 
-        if(gameState.currentPhase == BattlePhase.DUEL_PHASE)
+        //string playerStateName = gameState.players[playerIndex].stateMachine.state.GetType().Name;
+
+        if (gameState.currentPhase == BattlePhase.DUEL_PHASE)
         {
-            Vector3 lookAtTarget = new Vector3(
-                otherPlayerModel.transform.position.x,
-                transform.position.y,
-                otherPlayerModel.transform.position.z);
-            transform.LookAt(lookAtTarget);
+            transform.forward = (Vector3)gameState.players[playerIndex].forward;
         }
         else
         {
-            if(playerStateName == "FieldMove")
-            {
-                Vector3 pVel = (Vector3)gameState.players[playerIndex].velocity.Normalized();
-                if (pVel != Vector3.zero)
-                {
-                    //transform.forward = pVel;
-                    transform.forward = Vector3.Slerp(transform.forward, pVel, 0.1f);
-                }
-            }
+            //transform.forward = (Vector3)gameState.players[playerIndex].forward;
+            transform.forward = Vector3.Slerp(transform.forward, (Vector3)gameState.players[playerIndex].forward, 0.1f);
+
+            //if (playerStateName == "FieldMove")
+            //{
+            //    Vector3 pVel = (Vector3)gameState.players[playerIndex].velocity.Normalized();
+            //    if (pVel != Vector3.zero)
+            //    {
+            //        //transform.forward = pVel;
+            //        transform.forward = Vector3.Slerp(transform.forward, pVel, 0.1f);
+            //    }
+            //}
         }
     }
 
@@ -72,7 +83,17 @@ public class MageAnimHandler : MonoBehaviour
 
         // TODO: Check if animation is a trivial 'looping' type,
         // or has actual associated frame data to keep in sync with.
-        if (!isAlreadyCurrentAnim && !isAlreadyNextAnim) { animator.CrossFadeInFixedTime(animName, 0.05f); }
-        //if (!isAlreadyCurrentAnim && !isAlreadyNextAnim) { animator.Play(animName); }
+        if (gameState.players[playerIndex].stateMachine.state.animData != null)
+        {
+            if (!isAlreadyCurrentAnim && !isAlreadyNextAnim) {
+                int currentFrame = (int)gameState.players[playerIndex].stateMachine.state.currentFrame;
+                int totalFrames = (int)gameState.players[playerIndex].stateMachine.state.animData.frames.Count;
+                animator.Play(animName, -1, (float)currentFrame / (float)totalFrames);
+            }
+        }
+        else
+        {
+            if (!isAlreadyCurrentAnim && !isAlreadyNextAnim) { animator.CrossFadeInFixedTime(animName, 0.05f); }
+        }
     }
 }
