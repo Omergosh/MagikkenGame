@@ -17,6 +17,12 @@ public class DuelMoveForward : PlayerState
     {
         // State change guard clauses //
 
+        if ((context.currentInputs.buttonValues & INPUT_A) != 0)
+        {
+            context.player.stateMachine.SetState(context, new DuelJab());
+            return;
+        }
+
         if (DuelCommonTransitions.CommonJumpTransitions(context)) { return; }
 
         if (Fix64.Abs(context.currentInputs.moveX) <= moveDeadZone)
@@ -34,9 +40,9 @@ public class DuelMoveForward : PlayerState
 
 
         // Actual update logic //
-
-        context.player.velocity = new FixVector3((Fix64)Player.moveSpeed, Fix64.Zero, Fix64.Zero);
-        FaceOtherPlayer(context);
+        FixVector3 duelRelativeMove = new FixVector3((Fix64)Player.moveSpeed, Fix64.Zero, Fix64.Zero);
+        context.player.velocity = context.player.FromDuelToWorldSpace(duelRelativeMove);
+        context.player.FaceOtherPlayer(context);
     }
 
     public override void OnEnd(PlayerStateContext context)

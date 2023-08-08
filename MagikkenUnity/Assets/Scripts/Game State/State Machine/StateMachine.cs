@@ -17,6 +17,8 @@ public struct StateMachine
 
     public void AdvanceFrame(PlayerStateContext context, BattlePhase battlePhase)
     {
+        context.player.UpdateReferenceVectors(context);
+
         //Debug.Log($"{currentPhase} {battlePhase}");
         if (currentPhase != battlePhase)
         {

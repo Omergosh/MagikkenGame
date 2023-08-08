@@ -60,7 +60,7 @@ public class FightManager : MonoBehaviour
         else
         {
             if (Input.GetKeyDown(KeyCode.Escape)
-                || Input.GetKeyDown(KeyCode.Return)
+                //|| Input.GetKeyDown(KeyCode.Return)
                 || Input.GetKeyDown(KeyCode.Backspace)
                 )
             {
@@ -92,7 +92,10 @@ public class FightManager : MonoBehaviour
 
     private void UpdateCameras()
     {
-        
+        if(gameState.currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            vcamDuelTargetGroup.forward = (Vector3)gameState.duelPlaneForward;
+        }
     }
 
     private void FixedUpdate()
@@ -113,6 +116,32 @@ public class FightManager : MonoBehaviour
     void PollDebugInputs()
     {
         // Universal/global/debug commands:
+        if (Input.GetKeyDown(KeyCode.Semicolon))
+        {
+            vcamDuelTargetGroup.rotation = Quaternion.AngleAxis(-30f, Vector3.up);
+            Debug.Log("Angle -30");
+        }
+        if (Input.GetKeyDown(KeyCode.Quote))
+        {
+            vcamDuelTargetGroup.rotation = Quaternion.AngleAxis(+45f, Vector3.up);
+            Debug.Log("Angle +45");
+        }
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            vcamDuelTargetGroup.rotation = Quaternion.AngleAxis(0f, Vector3.up);
+            Debug.Log("Angle 0.");
+        }
+        if (Input.GetKeyDown(KeyCode.Comma))
+        {
+            vcamDuelTargetGroup.Rotate(Vector3.up, -10f);
+            Debug.Log("Angle -");
+        }
+        if (Input.GetKeyDown(KeyCode.Period))
+        {
+            vcamDuelTargetGroup.Rotate(Vector3.up, +10f);
+            Debug.Log("Angle +");
+        }
+
         if (Input.GetKeyDown(KeyCode.Space))
         {
             Debug.Log("Change phase!");
@@ -120,27 +149,15 @@ public class FightManager : MonoBehaviour
 
             if (gameState.currentPhase == BattlePhase.FIELD_PHASE)
             {
-                //cameraAnimator.Play("CameraSideToTopView");
                 Debug.Log("Change to field view!");
                 vcamDuel.gameObject.SetActive(false);
                 vcamFieldP1.gameObject.SetActive(true);
-                //vcamDuelTargetGroup.rotation.eulerAngles.Set(
-                //    vcamDuelTargetGroup.rotation.eulerAngles.x,
-                //    0f,
-                //    vcamDuelTargetGroup.rotation.eulerAngles.z
-                //    );
             }
             else
             {
-                //cameraAnimator.Play("CameraTopToSideView");
                 Debug.Log("Change to duel view!");
                 vcamDuel.gameObject.SetActive(true);
                 vcamFieldP1.gameObject.SetActive(false);
-                //vcamDuelTargetGroup.rotation.eulerAngles.Set(
-                //    vcamDuelTargetGroup.rotation.eulerAngles.x,
-                //    90f,
-                //    vcamDuelTargetGroup.rotation.eulerAngles.z
-                //    );
             }
         }
     }

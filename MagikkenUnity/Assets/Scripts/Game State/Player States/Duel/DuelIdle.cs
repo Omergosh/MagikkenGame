@@ -37,7 +37,7 @@ public class DuelIdle : PlayerState
         }
 
         //Debug.Log("duel idle update");
-        FaceOtherPlayer(context);
+        context.player.FaceOtherPlayer(context);
     }
 
     public override void OnEnd(PlayerStateContext context)

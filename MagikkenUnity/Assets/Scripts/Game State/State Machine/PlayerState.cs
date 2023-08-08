@@ -20,12 +20,4 @@ public abstract class PlayerState
         Debug.Log(animState.Name);
         return (animEntry.animationData);
     }
-
-    public void FaceOtherPlayer(PlayerStateContext stateContext)
-    {
-        FixVector3 thisPos = stateContext.player.position;
-        int otherPlayerIndex = stateContext.player.playerIndex == 0 ? 1 : 0;
-        FixVector3 theirPos = stateContext.gameState.players[otherPlayerIndex].position;
-        stateContext.player.forward = (theirPos - thisPos).Normalized();
-    }
 }

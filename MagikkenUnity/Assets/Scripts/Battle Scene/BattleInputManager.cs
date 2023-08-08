@@ -24,7 +24,7 @@ public class BattleInputManager : MonoBehaviour
     [SerializeField]
     CinemachineVirtualCamera p2Camera;
 
-    public const float directionInputDeadzone = 0.2f;
+    public const float directionInputDeadzone = 0.4f;
 
     //InputAction p1MoveAction;
     //InputAction p1AttackAction;

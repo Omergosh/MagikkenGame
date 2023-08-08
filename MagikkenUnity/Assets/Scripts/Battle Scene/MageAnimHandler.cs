@@ -52,12 +52,12 @@ public class MageAnimHandler : MonoBehaviour
 
         if (gameState.currentPhase == BattlePhase.DUEL_PHASE)
         {
-            transform.forward = (Vector3)gameState.players[playerIndex].forward;
+            transform.forward = (Vector3)gameState.players[playerIndex].Forward;
         }
         else
         {
             //transform.forward = (Vector3)gameState.players[playerIndex].forward;
-            transform.forward = Vector3.Slerp(transform.forward, (Vector3)gameState.players[playerIndex].forward, 0.1f);
+            transform.forward = Vector3.Slerp(transform.forward, (Vector3)gameState.players[playerIndex].Forward, 0.1f);
 
             //if (playerStateName == "FieldMove")
             //{

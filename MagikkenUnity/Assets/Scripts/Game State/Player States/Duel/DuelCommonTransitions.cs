@@ -6,7 +6,8 @@ public static class DuelCommonTransitions
 
     public static bool CommonJumpTransitions(PlayerStateContext context)
     {
-        if (context.currentInputs.moveY > moveDeadZone)
+        //if (context.currentInputs.moveY > moveDeadZone)
+        if ((context.currentInputs.buttonValues & INPUT_UP) != 0)
         {
             context.player.stateMachine.SetState(context, new DuelJump());
             return true;

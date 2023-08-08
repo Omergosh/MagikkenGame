@@ -28,14 +28,14 @@ public enum PlayerAnimState
 public class Player
 {
     // Constants (Duel-specific)
-    public const int moveSpeed = 400;
+    public const int moveSpeed = 500;
     public const int moveSpeedBack = 15;
     public const int moveAccelAir = 100;
-    public const int duelJumpPower = 1500;
+    public const int duelJumpPower = 1700;
 
     // Constants (Field-specific)
-    public const int fieldMoveSpeed = 550;
-    public const int fieldJumpPower = 2000;
+    public const int fieldMoveSpeed = 650;
+    public const int fieldJumpPower = 3000;
 
     // Config
     public readonly int playerIndex;
@@ -100,6 +100,8 @@ public class Player
         {
             PullIntoBounds(stageRadius);
         }
+
+        // TODO: change this behaviour for Duel Phase, to maintain alignment with the duel plane.
     }
 
     #region Field functions
@@ -141,21 +143,82 @@ public class Player
 
     #region Duel functions
 
-
-
     public FixVector3 FromDuelToWorldSpace(FixVector3 originalDuelVector)
     {
         // Assumption: all reference vectors are normalized.
 
-        FixVector3 convertedWorldVector = originalDuelVector;
+        FixVector3 convertedWorldVector;
+
+        FixVector3 relativeForward = directionDuelPlaneForward * originalDuelVector.z;
+        FixVector3 relativeRight = DuelPlaneRight * originalDuelVector.x;
+
+        convertedWorldVector = relativeForward + relativeRight;
+        convertedWorldVector.y = originalDuelVector.y;
+
+        return convertedWorldVector;
+    }
+
+    public FixVector3 FromDuelToWorldSpaceMoreDetail(FixVector3 originalDuelVector)
+    {
+        // Assumption: all reference vectors are normalized.
+
+        FixVector3 convertedWorldVector;
+
+        FixVector3 relativeForward = directionDuelPlaneForward * originalDuelVector.z;
+        FixVector3 relativeRight = DuelPlaneRight * originalDuelVector.x;
+
+        Fix64 magnitudeExceptY = new FixVector3(
+            originalDuelVector.x,
+            Fix64.Zero,
+            originalDuelVector.z
+            )
+            .Magnitude();
+
+        convertedWorldVector = relativeForward + relativeRight;
+        convertedWorldVector.y = Fix64.Zero;
+        convertedWorldVector = convertedWorldVector.Normalized() * magnitudeExceptY;
+        convertedWorldVector.y = originalDuelVector.y;
+
         return convertedWorldVector;
     }
 
     public FixVector3 FromWorldToDuelSpace(FixVector3 originalWorldVector)
     {
         // Assumption: all reference vectors are normalized.
-        FixVector3 convertedDuelVector = originalWorldVector;
+
+        FixVector3 convertedDuelVector;
+
+        Fix64 hypotenuse = originalWorldVector.Magnitude();
+        Fix64 adjacent = hypotenuse;
+
+        // If the value used in Fix64 division/Acos is 'outside a specific range',
+        // so this block is to avoid raising those errors/exceptions.
+        if (hypotenuse < GameState.FIXED_DELTA_TIME)
+        {
+            Fix64 angle = Fix64.Acos(
+                FixVector3.DotProduct(originalWorldVector, DuelPlaneRight)
+                / hypotenuse
+                );
+
+            adjacent = hypotenuse * Fix64.Cos(angle);
+        }
+
+        convertedDuelVector = new FixVector3(
+            adjacent,
+            originalWorldVector.y,
+            Fix64.Zero
+            );
+
         return convertedDuelVector;
+    }
+
+    public void UpdateDuelFacing()
+    {
+        facingRight = true;
+        if(FromWorldToDuelSpace(directionOfOpponent).x < Fix64.Zero)
+        {
+            facingRight = false;
+        }
     }
 
     public int FacingMultiplier { get { return facingRight ? 1 : -1; } }
@@ -198,14 +261,14 @@ public class Player
 
         return hitboxesToReturn;
     }
-    
+
     public ConvertedHitboxData[] GetHitboxesWorld()
     {
         ConvertedHitboxData[] hitboxesToReturn = GetHitboxesRelative();
 
         FixVector3 playerPositionOffset = position;
 
-        for(int i = 0; i < hitboxesToReturn.Length; i++)
+        for (int i = 0; i < hitboxesToReturn.Length; i++)
         {
             hitboxesToReturn[i].position += playerPositionOffset;
         }
@@ -213,8 +276,26 @@ public class Player
 
         return hitboxesToReturn;
     }
-    
-    public FixVector3 forward
+
+    public void UpdateReferenceVectors(PlayerStateContext stateContext)
+    {
+        int otherPlayerIndex = playerIndex == 0 ? 1 : 0;
+        FixVector3 theirPos = stateContext.gameState.players[otherPlayerIndex].position;
+        directionOfOpponent = (theirPos - position).Normalized();
+        directionDuelPlaneForward = stateContext.gameState.duelPlaneForward;
+    }
+
+    public void FaceOtherPlayer(PlayerStateContext stateContext)
+    {
+        Forward = directionOfOpponent.Normalized();
+    }
+
+    public FixVector3 DuelPlaneRight
+    {
+        get { return directionDuelPlaneForward.RotatedAroundYAxis90DegreesClockwise().Normalized(); }
+    }
+
+    public FixVector3 Forward
     {
         get
         {
@@ -229,7 +310,7 @@ public class Player
             directionFacing = newForward.Normalized();
         }
     }
-    public FixVector3 right
+    public FixVector3 Right
     {
         get
         {

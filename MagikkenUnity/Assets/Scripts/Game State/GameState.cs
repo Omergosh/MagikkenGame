@@ -10,7 +10,7 @@ public static class GameStateConstants
     public const int TARGET_FRAMES_PER_SECOND = 60;
     public const int UNITY_TO_GAME_DISTANCE_MULTIPLIER = 100;
 
-    public const int GRAVITY = 4500;
+    public const int GRAVITY = 6000;
     public const int FRICTION = 1200;
 
     public const int INPUT_LEFT = (1 << 0);
@@ -54,6 +54,7 @@ public class GameState
         currentPhase = BattlePhase.DUEL_PHASE;
 
         stageRadius = new Fix64(stageRadiusInUnityUnits * GameStateConstants.UNITY_TO_GAME_DISTANCE_MULTIPLIER);
+        CalibrateDuelPlane();
     }
     public void AdvanceFrame(InputSnapshot[] inputs)
     {
@@ -102,7 +103,9 @@ public class GameState
         // Overlap collisions (push overlapping bodies away from wall, towards centre)
         // Character attack/hit checks
         // Reaction state updates
+
         // Camera update (axis, etc.) (actually for now just skip this step)
+        //CalibrateDuelPlane();
 
         // Reaction state updates
         for (int p = 0; p < inputs.Length; p++)
@@ -221,7 +224,7 @@ public class GameState
         duelPlaneRight.y = Fix64.Zero;
         duelPlaneRight = duelPlaneRight.Normalized();
 
-        duelPlaneForward = duelPlaneRight.RotatedAroundYAxis90DegreesCounterclockwise();
+        duelPlaneForward = duelPlaneRight.RotatedAroundYAxis90DegreesCounterclockwise().Normalized();
     }
 
     private void ReadInputs() { }

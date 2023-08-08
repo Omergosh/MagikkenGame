@@ -28,7 +28,7 @@ public class FieldIdle : PlayerState
             return;
         }
 
-        FaceOtherPlayer(context);
+        context.player.FaceOtherPlayer(context);
     }
 
     public override void OnEnd(PlayerStateContext context)

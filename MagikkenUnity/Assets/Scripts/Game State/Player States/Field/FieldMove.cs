@@ -37,7 +37,7 @@ public class FieldMove : PlayerState
             moveInputVector.y
             );
         context.player.velocity = moveOutputVector * (Fix64)Player.fieldMoveSpeed;
-        context.player.forward = moveOutputVector;
+        context.player.Forward = moveOutputVector;
     }
 
     public override void OnEnd(PlayerStateContext context)
