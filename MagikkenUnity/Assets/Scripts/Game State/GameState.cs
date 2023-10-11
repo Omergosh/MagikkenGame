@@ -111,8 +111,8 @@ public class GameState
         for (int p = 0; p < inputs.Length; p++)
         {
             // If character is in a neutral state, they automatically turn to face their opponent.
-            if (players[p].position.y > Fix64.Zero) {  }
-            else { UpdatePlayerFacing(p); }
+            //if (players[p].position.y > Fix64.Zero) {  }
+            //else { UpdatePlayerFacing(p); }
         }
     }
 

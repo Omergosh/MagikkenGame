@@ -28,8 +28,8 @@ public enum PlayerAnimState
 public class Player
 {
     // Constants (Duel-specific)
-    public const int moveSpeed = 500;
-    public const int moveSpeedBack = 15;
+    public const int duelMoveSpeed = 500;
+    public const int duelMoveSpeedBack = 350;
     public const int moveAccelAir = 100;
     public const int duelJumpPower = 1700;
 
@@ -98,7 +98,7 @@ public class Player
         //      (this may change if ceilings are added)
         if (CheckOutOfBounds(stageRadius))
         {
-            PullIntoBounds(stageRadius);
+            PullIntoBoundsField(stageRadius);
         }
 
         // TODO: change this behaviour for Duel Phase, to maintain alignment with the duel plane.
@@ -132,7 +132,7 @@ public class Player
         return positionExceptY.Magnitude() > stageRadius;
     }
 
-    public void PullIntoBounds(Fix64 stageRadius)
+    public void PullIntoBoundsField(Fix64 stageRadius)
     {
         FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, position.z);
         //FixVector3 originExceptY = new FixVector3(Fix64.Zero, position.y, Fix64.Zero);
@@ -187,20 +187,42 @@ public class Player
         // Assumption: all reference vectors are normalized.
 
         FixVector3 convertedDuelVector;
+        //FixVector3 originalWorldVectorExceptY = new FixVector3(
+        //    originalWorldVector.x,
+        //    Fix64.Zero,
+        //    originalWorldVector.z
+        //    );
 
         Fix64 hypotenuse = originalWorldVector.Magnitude();
-        Fix64 adjacent = hypotenuse;
+        Fix64 adjacent = hypotenuse; // Backup value in case values are too low for us to use math functions without throwing errors.
+        Fix64 dotProduct = FixVector3.DotProduct(originalWorldVector, DuelPlaneRight);
 
-        // If the value used in Fix64 division/Acos is 'outside a specific range',
-        // so this block is to avoid raising those errors/exceptions.
-        if (hypotenuse < GameState.FIXED_DELTA_TIME)
+        // This if statement avoids an "Attempted to divide by zero" error.
+        if (hypotenuse > GameState.FIXED_DELTA_TIME)
         {
-            Fix64 angle = Fix64.Acos(
-                FixVector3.DotProduct(originalWorldVector, DuelPlaneRight)
-                / hypotenuse
-                );
+            Fix64 x = dotProduct / hypotenuse;
+            // If the value used in Fix64 division/Acos is 'outside a specific range' (-1,1),
+            // an error will be thrown,
+            // so this block is to avoid raising those errors/exceptions.
+            // The error occurs if the magnitude of the vectors plugged in are too small,
+            // so we set a minimum mandatory magnitude before we use the arc cosine function.
+            // If the value is too small, we just pretend it's zero.
+            //if (hypotenuse <= Fix64.One)
+            //if(hypotenuse > Fix64.Zero)
+            if (x > GameState.FIXED_DELTA_TIME || -x > GameState.FIXED_DELTA_TIME)
+            {
+                Debug.Log(playerIndex);
+                Debug.Log(hypotenuse);
+                Debug.Log(adjacent);
+                Debug.Log(x);
+                x = x > Fix64.One ? Fix64.One : x;
+                x = x < -Fix64.One ? -Fix64.One : x;
+                Fix64 angle = Fix64.Acos(
+                    x
+                    );
 
-            adjacent = hypotenuse * Fix64.Cos(angle);
+                adjacent = hypotenuse * Fix64.Cos(angle);
+            }
         }
 
         convertedDuelVector = new FixVector3(
@@ -283,11 +305,36 @@ public class Player
         FixVector3 theirPos = stateContext.gameState.players[otherPlayerIndex].position;
         directionOfOpponent = (theirPos - position).Normalized();
         directionDuelPlaneForward = stateContext.gameState.duelPlaneForward;
+
+        // Debug
+        if(playerIndex == 0)
+        {
+            //Debug.Log("reference vector work p1");
+            //Debug.Log((Vector3)theirPos);
+            //Debug.Log((Vector3)directionOfOpponent);
+            //Debug.Log((Vector3)directionDuelPlaneForward);
+        }
     }
 
     public void FaceOtherPlayer(PlayerStateContext stateContext)
     {
         Forward = directionOfOpponent.Normalized();
+        if(stateContext.gameState.currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            UpdateDuelFacing();
+        }
+    }
+
+    public bool IsOpponentOnRightDuel(PlayerStateContext stateContext)
+    {
+        bool isP2OnRight = stateContext.gameState.players[0].DuelPosition.x < stateContext.gameState.players[1].DuelPosition.x;
+        if (playerIndex == 0) { return isP2OnRight; }
+        return !isP2OnRight;
+    }
+
+    public FixVector3 DuelPosition
+    {
+        get { return FromWorldToDuelSpace(position); }
     }
 
     public FixVector3 DuelPlaneRight

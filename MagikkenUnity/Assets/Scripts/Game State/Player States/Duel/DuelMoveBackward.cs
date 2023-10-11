@@ -10,7 +10,7 @@ public class DuelMoveBackward : PlayerState
     {
         Debug.Log("duel movebackward start");
         moveDeadZone = Fix64.One / new Fix64(20);
-        context.player.velocity = new FixVector3(-(Fix64)Player.moveSpeed, Fix64.Zero, Fix64.Zero);
+        context.player.velocity = new FixVector3(-(Fix64)Player.duelMoveSpeed, Fix64.Zero, Fix64.Zero);
     }
 
     public override void OnUpdate(PlayerStateContext context)
@@ -23,8 +23,10 @@ public class DuelMoveBackward : PlayerState
             return;
         }
 
+        // Check if player will jump
         if (DuelCommonTransitions.CommonJumpTransitions(context)) { return; }
 
+        // Check if player stopped moving
         if (Fix64.Abs(context.currentInputs.moveX) <= moveDeadZone)
         {
             context.player.velocity = FixVector3.Zero;
@@ -32,7 +34,12 @@ public class DuelMoveBackward : PlayerState
             return;
         }
 
-        if (context.currentInputs.moveX > Fix64.Zero)
+        // Check if player started moving forwards instead
+        bool opponentIsOnRight = context.player.IsOpponentOnRightDuel(context);
+        if (
+            (context.currentInputs.moveX > Fix64.Zero && opponentIsOnRight) ||
+            (context.currentInputs.moveX < Fix64.Zero && !opponentIsOnRight)
+            )
         {
             context.player.stateMachine.SetState(context, new DuelMoveForward());
             return;
@@ -40,13 +47,20 @@ public class DuelMoveBackward : PlayerState
 
 
         // Actual update logic //
-        FixVector3 duelRelativeMove = new FixVector3(-(Fix64)Player.moveSpeed, Fix64.Zero, Fix64.Zero);
+        Fix64 facingMultiplier = opponentIsOnRight ? Fix64.One : -Fix64.One;
+        FixVector3 duelRelativeMove = new FixVector3(
+            -(Fix64)Player.duelMoveSpeedBack * facingMultiplier,
+            Fix64.Zero,
+            Fix64.Zero);
         context.player.velocity = context.player.FromDuelToWorldSpace(duelRelativeMove);
         context.player.FaceOtherPlayer(context);
-        context.player.UpdateDuelFacing();
+        //context.player.UpdateDuelFacing();
 
         //Debug.Log((Vector3)context.player.FromWorldToDuelSpace(context.player.position));
-        Debug.Log(context.player.facingRight);
+        //Debug.Log(context.player.facingRight);
+
+        //Debug.Log((Vector3)context.player.directionOfOpponent);
+        //Debug.Log((Vector3)context.player.FromWorldToDuelSpace(context.player.directionOfOpponent));
     }
 
     public override void OnEnd(PlayerStateContext context)
