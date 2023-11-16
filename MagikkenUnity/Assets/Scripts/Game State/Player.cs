@@ -51,14 +51,20 @@ public class Player
     public StateMachine stateMachine;
 
     // Physics vectors
-    public FixVector3 position;
-    public FixVector3 velocity;
+    public FixVector3 position3D;
+    public FixVector3 velocity3D;
 
     // Reference 3D vectors for orientation/movement
     public FixVector3 directionFacing;
     public FixVector3 directionOfOpponent;
-    public FixVector3 directionDuelPlaneForward;
     //public FixVector3 positionOfOpponent;
+
+    public FixVector3 directionDuelPlaneForward;
+
+    // Duel phase 2D plane vectors (without Z-axis/depth)
+    public FixVector2 duel2DPosition;
+    public FixVector2 duel2DVelocity;
+
 
     // TODO: add helper methods to retrieve the 'effective' 2D vectors to use during the Duel Phase.
 
@@ -75,12 +81,20 @@ public class Player
         stateMachine.state = new DuelIdle();
 
         facingRight = playerIndex == 0 ? true : false;
-        position = new FixVector3();
-        position.x = new Fix64(playerIndex == 0 ? -200 : 200);
-        position.y = Fix64.Zero;
-        velocity = new FixVector3();
-        velocity.x = new Fix64(playerIndex == 0 ? -20 : 20);
-        velocity.y = Fix64.Zero;
+
+        position3D = new FixVector3();
+        position3D.x = new Fix64(playerIndex == 0 ? -150 : 150);
+        position3D.y = Fix64.Zero;
+        
+        duel2DPosition = new FixVector2();
+        duel2DPosition.x = position3D.x;
+
+        velocity3D = new FixVector3();
+        velocity3D.x = new Fix64(playerIndex == 0 ? -400 : 400);
+        velocity3D.y = Fix64.Zero;
+        
+        duel2DVelocity = new FixVector2();
+        duel2DVelocity.x = velocity3D.x;
 
         directionFacing = new FixVector3();
         directionFacing.x = new Fix64(playerIndex == 0 ? 1 : -1);
@@ -91,59 +105,110 @@ public class Player
 
 
     // Helper methods / properties
-    public void EnforceStageBounds(Fix64 stageRadius)
+    public void EnforceStageBounds(Fix64 stageRadius, BattlePhase currentPhase)
     {
         // If player is out of bounds, pull them back in
         // Stage bounds only enforce position on the x and z axes, not y (vertical)
         //      (this may change if ceilings are added)
-        if (CheckOutOfBounds(stageRadius))
+        if (CheckOutOfBounds(stageRadius, currentPhase))
         {
-            PullIntoBoundsField(stageRadius);
+            PullIntoBoundsField(stageRadius, currentPhase);
         }
-
-        // TODO: change this behaviour for Duel Phase, to maintain alignment with the duel plane.
     }
 
     #region Field functions
-    public void ApplyFriction()
+    public void ApplyFriction(BattlePhase currentPhase)
     {
         // Only called when the player is on the ground.
 
         // this 'originalY' stuff should be unnecessary if this function is only called while the player is on the ground
         //Fix64 originalY = velocity.y;
 
-        velocity = Fix64Math.MoveTowards(
-            velocity,
-            FixVector3.Zero,
-            (Fix64)GameStateConstants.FRICTION * GameState.FIXED_DELTA_TIME
-            );
+        if (currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            duel2DVelocity = Fix64Math.MoveTowards(
+                duel2DVelocity,
+                FixVector2.Zero,
+                (Fix64)GameStateConstants.FRICTION * GameState.FIXED_DELTA_TIME
+                );
+        }
+        else
+        {
+            // Field Phase
+            velocity3D = Fix64Math.MoveTowards(
+                velocity3D,
+                FixVector3.Zero,
+                (Fix64)GameStateConstants.FRICTION * GameState.FIXED_DELTA_TIME
+                );
+        }
+
 
         //velocity.y = originalY;
     }
 
-    public void ApplyGravity()
+    public void ApplyGravity(BattlePhase currentPhase)
     {
-        velocity.y -= (Fix64)GameStateConstants.GRAVITY * GameState.FIXED_DELTA_TIME;
+        if (currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            duel2DVelocity.y -= (Fix64)GameStateConstants.GRAVITY * GameState.FIXED_DELTA_TIME;
+        }
+        else
+        {
+            // Field Phase
+            velocity3D.y -= (Fix64)GameStateConstants.GRAVITY * GameState.FIXED_DELTA_TIME;
+        }
     }
 
-    public bool CheckOutOfBounds(Fix64 stageRadius)
+    public bool CheckOutOfBounds(Fix64 stageRadius, BattlePhase currentPhase)
     {
-        FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, position.z);
+        if(currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            return Fix64.Abs(duel2DPosition.x) > stageRadius;
+        }
+
+        FixVector3 positionExceptY = new FixVector3(position3D.x, Fix64.Zero, position3D.z);
         return positionExceptY.Magnitude() > stageRadius;
     }
 
-    public void PullIntoBoundsField(Fix64 stageRadius)
+    public void PullIntoBoundsField(Fix64 stageRadius, BattlePhase currentPhase)
     {
-        FixVector3 positionExceptY = new FixVector3(position.x, Fix64.Zero, position.z);
-        //FixVector3 originExceptY = new FixVector3(Fix64.Zero, position.y, Fix64.Zero);
-        position.x *= (stageRadius / positionExceptY.Magnitude());
-        position.z *= (stageRadius / positionExceptY.Magnitude());
+        if (currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            duel2DPosition.x = duel2DPosition.x > Fix64.Zero ? stageRadius : -stageRadius;
+        }
+        else
+        {
+            // Field Phase
+            FixVector3 positionExceptY = new FixVector3(position3D.x, Fix64.Zero, position3D.z);
+            //FixVector3 originExceptY = new FixVector3(Fix64.Zero, position.y, Fix64.Zero);
+            position3D.x *= (stageRadius / positionExceptY.Magnitude());
+            position3D.z *= (stageRadius / positionExceptY.Magnitude());
+        }
     }
     #endregion
 
     #region Duel functions
+    public void SwitchToDuelCoordinates()
+    {
+        FixVector3 rotatedWorldToDuelPosition = FromWorldToDuelSpace(position3D);
+        FixVector3 rotatedWorldToDuelVelocity = FromWorldToDuelSpace(velocity3D);
+        duel2DPosition = new FixVector2(rotatedWorldToDuelPosition.x, rotatedWorldToDuelPosition.y);
+        duel2DVelocity = new FixVector2(rotatedWorldToDuelVelocity.x, rotatedWorldToDuelVelocity.y);
+    }
 
-    public FixVector3 FromDuelToWorldSpace(FixVector3 originalDuelVector)
+    public void DuelPhaseUpdate3DCoordinates()
+    {
+        position3D = FromDuel2DToWorldSpace(duel2DPosition);
+        velocity3D = FromDuel2DToWorldSpace(duel2DVelocity);
+    }
+
+    public FixVector3 FromDuel2DToWorldSpace(FixVector2 originalDuelVector)
+    {
+        FixVector3 original3DVector = new FixVector3(originalDuelVector.x, originalDuelVector.y, Fix64.Zero);
+        return FromDuel3DToWorldSpace(original3DVector);
+    }
+
+    public FixVector3 FromDuel3DToWorldSpace(FixVector3 originalDuelVector)
     {
         // Assumption: all reference vectors are normalized.
 
@@ -244,7 +309,7 @@ public class Player
     }
 
     public int FacingMultiplier { get { return facingRight ? 1 : -1; } }
-    public bool IsOnGround { get { return position.y <= Fix64.Zero; } }
+    public bool IsOnGround { get { return position3D.y <= Fix64.Zero; } }
     #endregion
 
     #region Helper methods
@@ -288,7 +353,7 @@ public class Player
     {
         ConvertedHitboxData[] hitboxesToReturn = GetHitboxesRelative();
 
-        FixVector3 playerPositionOffset = position;
+        FixVector3 playerPositionOffset = position3D;
 
         for (int i = 0; i < hitboxesToReturn.Length; i++)
         {
@@ -302,8 +367,8 @@ public class Player
     public void UpdateReferenceVectors(PlayerStateContext stateContext)
     {
         int otherPlayerIndex = playerIndex == 0 ? 1 : 0;
-        FixVector3 theirPos = stateContext.gameState.players[otherPlayerIndex].position;
-        directionOfOpponent = (theirPos - position).Normalized();
+        FixVector3 theirPos = stateContext.gameState.players[otherPlayerIndex].position3D;
+        directionOfOpponent = (theirPos - position3D).Normalized();
         directionDuelPlaneForward = stateContext.gameState.duelPlaneForward;
 
         // Debug
@@ -334,7 +399,7 @@ public class Player
 
     public FixVector3 DuelPosition
     {
-        get { return FromWorldToDuelSpace(position); }
+        get { return FromWorldToDuelSpace(position3D); }
     }
 
     public FixVector3 DuelPlaneRight

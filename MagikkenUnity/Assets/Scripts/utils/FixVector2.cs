@@ -1,5 +1,6 @@
 using System;
 using FixMath.NET;
+using UnityEngine;
 
 [Serializable]
 public struct FixVector2 : IEquatable<FixVector2>
@@ -86,6 +87,11 @@ public struct FixVector2 : IEquatable<FixVector2>
         return HashCode.Combine(x, y);
     }
     #endregion
+
+    public static explicit operator Vector2(FixVector2 v)
+    {
+        return new Vector2((float)v.x, (float)v.y);
+    }
 
     /// <summary>
     /// Returns a number indicating the sign of the x component of a FixVector2.

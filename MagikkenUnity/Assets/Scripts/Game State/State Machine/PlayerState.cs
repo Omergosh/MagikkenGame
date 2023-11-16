@@ -20,4 +20,9 @@ public abstract class PlayerState
         Debug.Log(animState.Name);
         return (animEntry.animationData);
     }
+
+    //public void SwitchToDuelPhaseCoordinates(PlayerStateContext stateContext)
+    //{
+    //    stateContext.player.SwitchToDuelCoordinates();
+    //}
 }

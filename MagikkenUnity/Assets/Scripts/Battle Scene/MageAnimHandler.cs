@@ -21,9 +21,9 @@ public class MageAnimHandler : MonoBehaviour
     {
 
         transform.position = new Vector3(
-        ((float)gameState.players[playerIndex].position.x) / 100f,
-        (((float)gameState.players[playerIndex].position.y) / 100f) + BattleVisualsManager.stageFloorOffset,
-        ((float)gameState.players[playerIndex].position.z) / 100f
+        ((float)gameState.players[playerIndex].position3D.x) / 100f,
+        (((float)gameState.players[playerIndex].position3D.y) / 100f) + BattleVisualsManager.stageFloorOffset,
+        ((float)gameState.players[playerIndex].position3D.z) / 100f
         );
 
         //transform.localScale = new Vector3(

@@ -12,7 +12,7 @@ public class DuelFall : PlayerState
     public override void OnUpdate(PlayerStateContext context)
     {
         //if(DuelCommonTransitions.Common)
-        if (context.player.position.y <= Fix64.Zero)
+        if (context.player.duel2DPosition.y <= Fix64.Zero)
         {
             context.player.stateMachine.SetState(context, new DuelIdle());
             return;

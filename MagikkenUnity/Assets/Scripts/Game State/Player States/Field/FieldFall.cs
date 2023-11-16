@@ -15,7 +15,7 @@ public class FieldFall : PlayerState
 
 
         // State change guard clauses //
-        if (context.player.position.y <= Fix64.Zero)
+        if (context.player.position3D.y <= Fix64.Zero)
         {
             context.player.stateMachine.SetState(context, new FieldIdle());
             return;

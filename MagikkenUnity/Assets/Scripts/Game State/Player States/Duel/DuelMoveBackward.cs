@@ -10,7 +10,7 @@ public class DuelMoveBackward : PlayerState
     {
         Debug.Log("duel movebackward start");
         moveDeadZone = Fix64.One / new Fix64(20);
-        context.player.velocity = new FixVector3(-(Fix64)Player.duelMoveSpeed, Fix64.Zero, Fix64.Zero);
+        context.player.duel2DVelocity = new FixVector2(-(Fix64)Player.duelMoveSpeed, Fix64.Zero);
     }
 
     public override void OnUpdate(PlayerStateContext context)
@@ -29,7 +29,7 @@ public class DuelMoveBackward : PlayerState
         // Check if player stopped moving
         if (Fix64.Abs(context.currentInputs.moveX) <= moveDeadZone)
         {
-            context.player.velocity = FixVector3.Zero;
+            context.player.duel2DVelocity = FixVector2.Zero;
             context.player.stateMachine.SetState(context, new DuelIdle());
             return;
         }
@@ -48,11 +48,11 @@ public class DuelMoveBackward : PlayerState
 
         // Actual update logic //
         Fix64 facingMultiplier = opponentIsOnRight ? Fix64.One : -Fix64.One;
-        FixVector3 duelRelativeMove = new FixVector3(
+        FixVector2 duelRelativeMove = new FixVector2(
             -(Fix64)Player.duelMoveSpeedBack * facingMultiplier,
-            Fix64.Zero,
             Fix64.Zero);
-        context.player.velocity = context.player.FromDuelToWorldSpace(duelRelativeMove);
+        context.player.duel2DVelocity = duelRelativeMove;
+        //context.player.velocity3D = context.player.FromDuel3DToWorldSpace(duelRelativeMove);
         context.player.FaceOtherPlayer(context);
         //context.player.UpdateDuelFacing();
 

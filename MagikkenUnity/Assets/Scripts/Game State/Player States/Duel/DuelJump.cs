@@ -7,19 +7,19 @@ public class DuelJump : PlayerState
     public override void OnStart(PlayerStateContext context)
     {
         Debug.Log("duel jump start");
-        context.player.velocity.y = (Fix64)Player.duelJumpPower;
+        context.player.duel2DVelocity.y = (Fix64)Player.duelJumpPower;
     }
 
     public override void OnUpdate(PlayerStateContext context)
     {
         //if(DuelCommonTransitions.Common)
-        if (context.player.position.y <= Fix64.Zero)
+        if (context.player.position3D.y <= Fix64.Zero)
         {
             context.player.stateMachine.SetState(context, new DuelIdle());
             return;
         }
 
-        if (context.player.velocity.y <= Fix64.Zero)
+        if (context.player.velocity3D.y <= Fix64.Zero)
         {
             context.player.stateMachine.SetState(context, new DuelFall());
             return;

@@ -36,7 +36,7 @@ public class FieldMove : PlayerState
             Fix64.Zero,
             moveInputVector.y
             );
-        context.player.velocity = moveOutputVector * (Fix64)Player.fieldMoveSpeed;
+        context.player.velocity3D = moveOutputVector * (Fix64)Player.fieldMoveSpeed;
         context.player.Forward = moveOutputVector;
     }
 

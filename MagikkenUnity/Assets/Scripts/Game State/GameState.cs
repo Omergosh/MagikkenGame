@@ -78,27 +78,33 @@ public class GameState
                 gameState = this
             };
             players[p].stateMachine.AdvanceFrame(ctx, currentPhase);
+
+            //players[p].DuelPhaseUpdate3DCoordinates();
         }
         // Character physics
         for (int p = 0; p < inputs.Length; p++)
         {
-            players[p].position += players[p].velocity * FIXED_DELTA_TIME;
-            if (players[p].position.y > Fix64.Zero)
+            players[p].duel2DPosition += players[p].duel2DVelocity * FIXED_DELTA_TIME;
+            if (players[p].duel2DPosition.y > Fix64.Zero)
             {
-                players[p].ApplyGravity();
+                players[p].ApplyGravity(currentPhase);
             }
             else
             {
-                players[p].ApplyFriction();
+                players[p].ApplyFriction(currentPhase);
 
-                if (players[p].position.y < Fix64.Zero) { players[p].position.y = Fix64.Zero; }
+                if (players[p].duel2DPosition.y < Fix64.Zero) { players[p].duel2DPosition.y = Fix64.Zero; }
             }
+
+            players[p].DuelPhaseUpdate3DCoordinates();
         }
         // Push collisions
         // Wall collisions
         for (int p = 0; p < inputs.Length; p++)
         {
-            players[p].EnforceStageBounds(stageRadius);
+            players[p].EnforceStageBounds(stageRadius, currentPhase);
+
+            players[p].DuelPhaseUpdate3DCoordinates();
         }
         // Overlap collisions (push overlapping bodies away from wall, towards centre)
         // Character attack/hit checks
@@ -114,13 +120,6 @@ public class GameState
             //if (players[p].position.y > Fix64.Zero) {  }
             //else { UpdatePlayerFacing(p); }
         }
-    }
-
-    public void UpdatePlayerFacing(int pIndex)
-    {
-        int enemyIndex = (pIndex == 0) ? 1 : 0;
-        if (players[enemyIndex].position.x > players[pIndex].position.x) { players[pIndex].facingRight = true; }
-        else if (players[enemyIndex].position.x < players[pIndex].position.x) { players[pIndex].facingRight = false; }
     }
 
     #endregion
@@ -144,23 +143,23 @@ public class GameState
         // Character physics
         for (int p = 0; p < inputs.Length; p++)
         {
-            players[p].position += players[p].velocity * FIXED_DELTA_TIME;
-            if (players[p].position.y > Fix64.Zero)
+            players[p].position3D += players[p].velocity3D * FIXED_DELTA_TIME;
+            if (players[p].position3D.y > Fix64.Zero)
             {
-                players[p].ApplyGravity();
+                players[p].ApplyGravity(currentPhase);
             }
             else
             {
-                players[p].ApplyFriction();
+                players[p].ApplyFriction(currentPhase);
 
-                if (players[p].position.y < Fix64.Zero) { players[p].position.y = Fix64.Zero; }
+                if (players[p].position3D.y < Fix64.Zero) { players[p].position3D.y = Fix64.Zero; }
             }
         }
         // Push collisions
         // Wall collisions
         for (int p = 0; p < inputs.Length; p++)
         {
-            players[p].EnforceStageBounds(stageRadius);
+            players[p].EnforceStageBounds(stageRadius, currentPhase);
         }
         // Overlap collisions (push overlapping bodies away from wall, towards centre)
         // Character attack/hit checks
@@ -211,16 +210,31 @@ public class GameState
 
     public void ChangePhase(int attackerIndex)
     {
-        if (currentPhase == BattlePhase.DUEL_PHASE) { currentPhase = BattlePhase.FIELD_PHASE; }
-        else if (currentPhase == BattlePhase.FIELD_PHASE) {
+        if (currentPhase == BattlePhase.DUEL_PHASE)
+        {
+            currentPhase = BattlePhase.FIELD_PHASE;
+        }
+        else if (currentPhase == BattlePhase.FIELD_PHASE)
+        {
             currentPhase = BattlePhase.DUEL_PHASE;
             CalibrateDuelPlane();
+            // Force an instant recalculation of each player's reference orders -
+            // to avoid incorrect/inconsistent logic on frame 1 of Duel Phase.
+            foreach (Player player in players)
+            {
+                player.UpdateReferenceVectors(new PlayerStateContext()
+                {
+                    player = player,
+                    gameState = this
+                });
+                player.SwitchToDuelCoordinates();
+            }
         }
     }
 
     public void CalibrateDuelPlane()
     {
-        duelPlaneRight = players[1].position - players[0].position;
+        duelPlaneRight = players[1].position3D - players[0].position3D;
         duelPlaneRight.y = Fix64.Zero;
         duelPlaneRight = duelPlaneRight.Normalized();
 
