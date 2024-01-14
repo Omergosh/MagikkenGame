@@ -4,26 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum PlayerAnimState
-{
-    IDLE,
-    MOVING,
-    IN_AIR,
-    ATTACKING,
-
-    PARRYING,
-    PARRY_RECOVERY,
-    PROJECT_STARTUP,
-    PROJECT_RECOVERY,
-    PORTAL_STARTUP,
-    PORTAL_RECOVERY,
-    PUMMEL_STARTUP,
-    PUMMEL_RECOVERY,
-
-    GETTING_PUMMELED,
-    HITSTUN
-}
-
 [Serializable]
 public class Player
 {
@@ -36,6 +16,13 @@ public class Player
     // Constants (Field-specific)
     public const int fieldMoveSpeed = 650;
     public const int fieldJumpPower = 3000;
+
+    // Constants (phase-agnostic)
+    public readonly HurtsphereData defaultHurtsphere = new HurtsphereData()
+    {
+        position = new Vector3Int(0, 100, 0),
+        radius = 75,
+    };
 
     // Config
     public readonly int playerIndex;
@@ -276,10 +263,10 @@ public class Player
             //if(hypotenuse > Fix64.Zero)
             if (x > GameState.FIXED_DELTA_TIME || -x > GameState.FIXED_DELTA_TIME)
             {
-                Debug.Log(playerIndex);
-                Debug.Log(hypotenuse);
-                Debug.Log(adjacent);
-                Debug.Log(x);
+                //Debug.Log(playerIndex);
+                //Debug.Log(hypotenuse);
+                //Debug.Log(adjacent);
+                //Debug.Log(x);
                 x = x > Fix64.One ? Fix64.One : x;
                 x = x < -Fix64.One ? -Fix64.One : x;
                 Fix64 angle = Fix64.Acos(
@@ -313,55 +300,130 @@ public class Player
     #endregion
 
     #region Helper methods
-    public ConvertedHitboxData[] GetHitboxesInFront()
+    public ConvertedHitsphereData[] GetHitspheresInFront()
     {
-        HitboxData[] hitboxesData = stateMachine.GetHitboxes();
-        ConvertedHitboxData[] hitboxesToReturn = new ConvertedHitboxData[hitboxesData.Length];
+        HitsphereData[] hitspheresData = stateMachine.GetHitboxes();
+        ConvertedHitsphereData[] hitspheresToReturn = new ConvertedHitsphereData[hitspheresData.Length];
 
         //float facingRightMultiplier
         //if(stateMachine.currentPhase == BattlePhase.DUEL_PHASE) { }
 
-        for (int i = 0; i < hitboxesToReturn.Length; i++)
+        for (int i = 0; i < hitspheresToReturn.Length; i++)
         {
-            hitboxesToReturn[i] = new ConvertedHitboxData(hitboxesData[i]);
+            hitspheresToReturn[i] = new ConvertedHitsphereData(hitspheresData[i]);
         }
 
 
-        return hitboxesToReturn;
+        return hitspheresToReturn;
     }
 
-    public ConvertedHitboxData[] GetHitboxesRelative()
+    public ConvertedHitsphereData[] GetHitspheresRelative()
     {
-        HitboxData[] hitboxesData = stateMachine.GetHitboxes();
-        ConvertedHitboxData[] hitboxesToReturn = new ConvertedHitboxData[hitboxesData.Length];
+        HitsphereData[] hitspheresData = stateMachine.GetHitboxes();
+        ConvertedHitsphereData[] hitspheresToReturn = new ConvertedHitsphereData[hitspheresData.Length];
 
         //float facingRightMultiplier
         //if(stateMachine.currentPhase == BattlePhase.DUEL_PHASE) { }
 
-        for (int i = 0; i < hitboxesToReturn.Length; i++)
+        for (int i = 0; i < hitspheresToReturn.Length; i++)
         {
-            hitboxesToReturn[i] = new ConvertedHitboxData(hitboxesData[i]);
-            hitboxesToReturn[i].position.x *= directionFacing.RotatedAroundYAxis90DegreesClockwise().Magnitude();
-            hitboxesToReturn[i].position.z *= directionFacing.Magnitude();
+            hitspheresToReturn[i] = new ConvertedHitsphereData(hitspheresData[i]);
+            
+            FixVector3 newHitspherePosition = Forward * hitspheresToReturn[i].position.z;
+            newHitspherePosition = newHitspherePosition + (Right * hitspheresToReturn[i].position.x);
+            newHitspherePosition.y = hitspheresToReturn[i].position.y;
+
+            hitspheresToReturn[i].position = newHitspherePosition;
         }
 
 
-        return hitboxesToReturn;
+        return hitspheresToReturn;
     }
 
-    public ConvertedHitboxData[] GetHitboxesWorld()
+    public ConvertedHitsphereData[] GetHitspheresWorld(BattlePhase currentPhase)
     {
-        ConvertedHitboxData[] hitboxesToReturn = GetHitboxesRelative();
+        ConvertedHitsphereData[] hitspheresToReturn = GetHitspheresRelative();
 
         FixVector3 playerPositionOffset = position3D;
 
-        for (int i = 0; i < hitboxesToReturn.Length; i++)
+        for (int i = 0; i < hitspheresToReturn.Length; i++)
         {
-            hitboxesToReturn[i].position += playerPositionOffset;
+            hitspheresToReturn[i].position += playerPositionOffset;
+        }
+
+        //Debug.Log($"position3d {playerIndex}: {position3D}");
+        //Debug.Log($"position3d {playerIndex}: {position3D}");
+
+        return hitspheresToReturn;
+    }
+
+    public ConvertedHurtsphereData[] GetHurtspheresInFront()
+    {
+        HurtsphereData[] hurtspheresData = stateMachine.GetHurtspheres();
+
+        // Guard clause - if frame data doesn't describe any hurtspheres, use the default.
+        if (hurtspheresData.Length == 0)
+        {
+            return new ConvertedHurtsphereData[1] { new ConvertedHurtsphereData(defaultHurtsphere) };
+        }
+
+        ConvertedHurtsphereData[] hurtspheresToReturn = new ConvertedHurtsphereData[hurtspheresData.Length];
+
+        //float facingRightMultiplier
+        //if(stateMachine.currentPhase == BattlePhase.DUEL_PHASE) { }
+
+        for (int i = 0; i < hurtspheresToReturn.Length; i++)
+        {
+            hurtspheresToReturn[i] = new ConvertedHurtsphereData(hurtspheresData[i]);
         }
 
 
-        return hitboxesToReturn;
+        return hurtspheresToReturn;
+    }
+
+    public ConvertedHurtsphereData[] GetHurtspheresRelative()
+    {
+        HurtsphereData[] hurtspheresData = stateMachine.GetHurtspheres();
+
+        // Guard clause - if frame data doesn't describe any hurtspheres, use the default.
+        if (hurtspheresData.Length == 0)
+        {
+            return new ConvertedHurtsphereData[1] { new ConvertedHurtsphereData(defaultHurtsphere) };
+        }
+
+        ConvertedHurtsphereData[] hurtspheresToReturn = new ConvertedHurtsphereData[hurtspheresData.Length];
+
+        //float facingRightMultiplier
+        //if(stateMachine.currentPhase == BattlePhase.DUEL_PHASE) { }
+
+        for (int i = 0; i < hurtspheresToReturn.Length; i++)
+        {
+            hurtspheresToReturn[i] = new ConvertedHurtsphereData(hurtspheresData[i]);
+
+            FixVector3 newHurtspherePosition = Forward * hurtspheresToReturn[i].position.z;
+            newHurtspherePosition = newHurtspherePosition + (Right * hurtspheresToReturn[i].position.x);
+            newHurtspherePosition.y = hurtspheresToReturn[i].position.y;
+
+            hurtspheresToReturn[i].position = newHurtspherePosition;
+        }
+
+
+        return hurtspheresToReturn;
+    }
+
+    public ConvertedHurtsphereData[] GetHurtspheresWorld()
+    {
+        ConvertedHurtsphereData[] hurtspheresToReturn = GetHurtspheresRelative();
+
+        FixVector3 playerPositionOffset = position3D;
+
+        for (int i = 0; i < hurtspheresToReturn.Length; i++)
+        {
+            hurtspheresToReturn[i].position += playerPositionOffset;
+        }
+
+
+        return hurtspheresToReturn;
     }
 
     public void UpdateReferenceVectors(PlayerStateContext stateContext)

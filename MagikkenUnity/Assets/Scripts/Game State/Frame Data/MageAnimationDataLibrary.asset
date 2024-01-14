@@ -15,3 +15,5 @@ MonoBehaviour:
   data:
   - playerState: DuelJab
     animationData: {fileID: 11400000, guid: ee6d0761b35a2b94898ffb6c90d1ae07, type: 2}
+  - playerState: FieldJab
+    animationData: {fileID: 11400000, guid: ecc6b00e37d098b43bb9aa2159868b46, type: 2}

@@ -204,6 +204,11 @@ public struct FixVector3 : IEquatable<FixVector3>
         return new FixVector3(x,y,z);
     }
 
+    public override string ToString()
+    {
+        return $"({(float)x}, {(float)y}, {(float)z})";
+    }
+
     public static readonly FixVector3 Zero = new FixVector3(Fix64.Zero, Fix64.Zero, Fix64.Zero);
     public static readonly FixVector3 UnitX = new FixVector3(Fix64.One, Fix64.Zero, Fix64.Zero);
     public static readonly FixVector3 UnitY = new FixVector3(Fix64.Zero, Fix64.One, Fix64.Zero);

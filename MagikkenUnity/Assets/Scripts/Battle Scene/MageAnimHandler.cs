@@ -15,6 +15,7 @@ public class MageAnimHandler : MonoBehaviour
     private void Awake()
     {
         animator = GetComponent<Animator>();
+        debugVisuals.playerIndex = playerIndex;
     }
 
     public void UpdateVisuals(in GameState gameState)

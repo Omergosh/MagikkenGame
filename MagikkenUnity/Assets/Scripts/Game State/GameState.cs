@@ -108,6 +108,38 @@ public class GameState
         }
         // Overlap collisions (push overlapping bodies away from wall, towards centre)
         // Character attack/hit checks
+        List<AttackHitInfo> attackHitsAgainstP1 = new List<AttackHitInfo>();
+        List<AttackHitInfo> attackHitsAgainstP2 = new List<AttackHitInfo>();
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            for (int otherPlayerIndex = 0; otherPlayerIndex < inputs.Length; otherPlayerIndex++)
+            {
+                // Guard clause for loop
+                if(p == otherPlayerIndex) {  continue; }
+
+                ConvertedHitsphereData[] hitspheres = players[p].GetHitspheresWorld(currentPhase);
+                ConvertedHurtsphereData[] hurtspheres = players[otherPlayerIndex].GetHurtspheresWorld();
+                foreach (ConvertedHitsphereData hitsphere in hitspheres)
+                {
+                    Debug.Log($"Hitsphere p{p + 1}: {hitsphere.position} {hitsphere.radius}");
+                    foreach (ConvertedHurtsphereData hurtsphere in hurtspheres)
+                    {
+
+                        // temp debugging
+                        Debug.Log($"Hurtsphere p{otherPlayerIndex + 1}: {hurtsphere.position} {hurtsphere.radius}");
+
+
+                        Fix64 distanceBetweenOrigins = (hitsphere.position - hurtsphere.position).Magnitude();
+                        if (distanceBetweenOrigins < new Fix64(hitsphere.radius + hurtsphere.radius))
+                        {
+                            Debug.Log("attack hit!");
+                        }
+                    }
+                }
+            }
+        }
+
+
         // Reaction state updates
 
         // Camera update (axis, etc.) (actually for now just skip this step)
@@ -162,6 +194,37 @@ public class GameState
             players[p].EnforceStageBounds(stageRadius, currentPhase);
         }
         // Overlap collisions (push overlapping bodies away from wall, towards centre)
+
+        // Character attack/hit checks
+        List<AttackHitInfo> attackHitsAgainstP1 = new List<AttackHitInfo>();
+        List<AttackHitInfo> attackHitsAgainstP2 = new List<AttackHitInfo>();
+        for (int p = 0; p < inputs.Length; p++)
+        {
+            for (int otherPlayerIndex = 0; otherPlayerIndex < inputs.Length; otherPlayerIndex++)
+            {
+                // Guard clause for loop
+                if (p == otherPlayerIndex) { continue; }
+
+                ConvertedHitsphereData[] hitspheres = players[p].GetHitspheresWorld(currentPhase);
+                ConvertedHurtsphereData[] hurtspheres = players[otherPlayerIndex].GetHurtspheresWorld();
+                foreach (ConvertedHitsphereData hitsphere in hitspheres)
+                {
+                    //Debug.Log($"Hitsphere p{p + 1}: {hitsphere.position} {hitsphere.radius}");
+                    
+                    foreach (ConvertedHurtsphereData hurtsphere in hurtspheres)
+                    {
+                        //Debug.Log($"Hurtsphere p{otherPlayerIndex + 1}: {hurtsphere.position} {hurtsphere.radius}");
+
+                        Fix64 distanceBetweenOrigins = (hitsphere.position - hurtsphere.position).Magnitude();
+                        if (distanceBetweenOrigins < new Fix64(hitsphere.radius + hurtsphere.radius))
+                        {
+                            Debug.Log("attack hit!");
+                        }
+                    }
+                }
+            }
+        }
+
         // Character attack/hit checks
         // Reaction state updates
 

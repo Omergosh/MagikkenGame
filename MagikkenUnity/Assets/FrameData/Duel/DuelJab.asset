@@ -14,69 +14,39 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AnimationFrameData
   ManaCost: 0
   frames:
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes:
-    - position: {x: 0, y: 150, z: 100}
-      size: {x: 50, y: 50, z: 50}
-      damageValue: 1
-      damageType: 0
-      isMagic: 0
-  - hitboxes:
-    - position: {x: 100, y: 200, z: 0}
-      size: {x: 50, y: 50, z: 50}
-      damageValue: 1
-      damageType: 0
-      isMagic: 0
-  - hitboxes:
-    - position: {x: 0, y: 100, z: 0}
-      size: {x: 150, y: 150, z: 150}
-      damageValue: 1
-      damageType: 0
-      isMagic: 0
-  - hitboxes:
-    - position: {x: 0, y: 100, z: -100}
-      size: {x: 100, y: 100, z: 100}
-      damageValue: 1
-      damageType: 0
-      isMagic: 0
-  - hitboxes:
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres:
     - position: {x: 0, y: 100, z: 100}
-      size: {x: 100, y: 100, z: 100}
+      radius: 25
       damageValue: 1
       damageType: 0
       isMagic: 0
-  - hitboxes:
-    - position: {x: 0, y: 100, z: 200}
-      size: {x: 100, y: 100, z: 100}
+  - hitspheres:
+    - position: {x: 0, y: 100, z: 100}
+      radius: 50
       damageValue: 1
       damageType: 0
       isMagic: 0
-  - hitboxes:
-    - position: {x: 0, y: 100, z: 200}
-      size: {x: 200, y: 50, z: 50}
+  - hitspheres:
+    - position: {x: 0, y: 100, z: 100}
+      radius: 35
       damageValue: 1
       damageType: 0
       isMagic: 0
-  - hitboxes:
-    - position: {x: 0, y: 100, z: 200}
-      size: {x: 50, y: 200, z: 50}
-      damageValue: 1
-      damageType: 0
-      isMagic: 0
-  - hitboxes:
-    - position: {x: 0, y: 100, z: 200}
-      size: {x: 50, y: 50, z: 200}
-      damageValue: 1
-      damageType: 0
-      isMagic: 0
-  - hitboxes: []
-  - hitboxes: []
-  - hitboxes: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
+  - hitspheres: []
   availableCancels: []

@@ -131,6 +131,11 @@ public struct FixVector2 : IEquatable<FixVector2>
         return (this / Magnitude());
     }
 
+    public override string ToString()
+    {
+        return $"({(float)x}, {(float)y})";
+    }
+
     public static readonly FixVector2 Zero = new FixVector2(Fix64.Zero, Fix64.Zero);
     public static readonly FixVector2 UnitX = new FixVector2(Fix64.One, Fix64.Zero);
     public static readonly FixVector2 UnitY = new FixVector2(Fix64.Zero, Fix64.One);

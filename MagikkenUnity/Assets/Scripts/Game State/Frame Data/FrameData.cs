@@ -13,41 +13,62 @@ public enum DamageType
 }
 
 [Serializable]
-public struct ConvertedHitboxData
+public struct ConvertedHitsphereData
 {
     public FixVector3 position;
-    public FixVector3 size;
+    public int radius;
     public int damageValue;
     public DamageType damageType;
     public bool isMagic;
 
-    public ConvertedHitboxData(HitboxData hitboxData)
+    public ConvertedHitsphereData(HitsphereData hitsphereData)
     {
-        position = new FixVector3(hitboxData.position);
-        size = new FixVector3(hitboxData.size);
-        damageValue = hitboxData.damageValue;
-        damageType = hitboxData.damageType;
-        isMagic = hitboxData.isMagic;
+        position = new FixVector3(hitsphereData.position);
+        radius = hitsphereData.radius;
+        damageValue = hitsphereData.damageValue;
+        damageType = hitsphereData.damageType;
+        isMagic = hitsphereData.isMagic;
     }
 }
 
 [Serializable]
-public struct HitboxData
+public struct ConvertedHurtsphereData
+{
+    public FixVector3 position;
+    public int radius;
+
+    public ConvertedHurtsphereData(HurtsphereData hurtsphereData)
+    {
+        position = new FixVector3(hurtsphereData.position);
+        radius = hurtsphereData.radius;
+    }
+}
+
+[Serializable]
+public struct HitsphereData
 {
     public Vector3Int position;
-    public Vector3Int size;
+    public int radius;
     public int damageValue;
     public DamageType damageType;
     public bool isMagic;
+}
+
+[Serializable]
+public struct HurtsphereData
+{
+    public Vector3Int position;
+    public int radius;
 }
 
 [Serializable]
 public struct FrameData
 {
-    public HitboxData[] hitboxes;
+    public HitsphereData[] hitspheres;
+    public HurtsphereData[] hurtspheres;
     public bool IsActive()
     {
-        return hitboxes.Length > 0;
+        return hitspheres.Length > 0;
     }
 }
 

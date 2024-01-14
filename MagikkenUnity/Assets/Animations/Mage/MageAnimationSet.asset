@@ -32,3 +32,5 @@ MonoBehaviour:
       Value: MageMoveForward
     - Key: FieldFall
       Value: MageFall
+    - Key: FieldJab
+      Value: MageAttackJab

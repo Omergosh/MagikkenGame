@@ -53,14 +53,14 @@ public class DuelIdle : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("duel idle end");
-        Debug.Log(context.player.playerIndex);
-        Debug.Log((Vector2)context.gameState.players[0].duel2DPosition);
-        Debug.Log((Vector3)context.gameState.players[0].DuelPosition);
-        Debug.Log((Vector3)context.gameState.players[0].position3D);
-        Debug.Log((Vector2)context.gameState.players[1].duel2DPosition);
-        Debug.Log((Vector3)context.gameState.players[1].DuelPosition);
-        Debug.Log((Vector3)context.gameState.players[1].position3D);
+        Debug.Log("duel idle end" + context.player.playerIndex.ToString());
+        Debug.Log((Vector2)context.gameState.players[context.player.playerIndex].duel2DPosition);
+        //Debug.Log((Vector2)context.gameState.players[0].duel2DPosition);
+        //Debug.Log((Vector3)context.gameState.players[0].DuelPosition);
+        //Debug.Log((Vector3)context.gameState.players[0].position3D);
+        //Debug.Log((Vector2)context.gameState.players[1].duel2DPosition);
+        //Debug.Log((Vector3)context.gameState.players[1].DuelPosition);
+        //Debug.Log((Vector3)context.gameState.players[1].position3D);
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

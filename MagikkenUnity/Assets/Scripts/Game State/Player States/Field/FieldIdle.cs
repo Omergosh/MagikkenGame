@@ -16,6 +16,12 @@ public class FieldIdle : PlayerState
 
     public override void OnUpdate(PlayerStateContext context)
     {
+        if ((context.currentInputs.buttonValues & INPUT_A) != 0)
+        {
+            context.player.stateMachine.SetState(context, new FieldJab());
+            return;
+        }
+
         // Update variables //
         moveVector.x = context.currentInputs.moveX;
         moveVector.y = context.currentInputs.moveY;
