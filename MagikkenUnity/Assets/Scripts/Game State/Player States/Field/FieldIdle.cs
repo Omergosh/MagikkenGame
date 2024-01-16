@@ -9,7 +9,7 @@ public class FieldIdle : PlayerState
 
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("field idle start");
+        //Debug.Log("field idle start");
         moveVector = new FixVector2();
         moveDeadZone = Fix64.One / new Fix64(20);
     }
@@ -39,7 +39,7 @@ public class FieldIdle : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("field idle end");
+        //Debug.Log("field idle end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

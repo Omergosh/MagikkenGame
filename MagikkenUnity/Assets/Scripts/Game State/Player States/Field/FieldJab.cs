@@ -8,7 +8,7 @@ public class FieldJab : PlayerState
 
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("field jab start");
+        //Debug.Log("field jab start");
         animData = FetchAnimData(typeof(FieldJab));
         currentFrame = 0;
     }
@@ -39,7 +39,7 @@ public class FieldJab : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("field jab end");
+        //Debug.Log("field jab end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

@@ -6,7 +6,7 @@ public class FieldFall : PlayerState
 {
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("field fall start");
+        //Debug.Log("field fall start");
     }
 
     public override void OnUpdate(PlayerStateContext context)
@@ -24,7 +24,7 @@ public class FieldFall : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("field fall end");
+        //Debug.Log("field fall end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

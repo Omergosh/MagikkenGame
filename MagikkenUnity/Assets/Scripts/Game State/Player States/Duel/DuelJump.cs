@@ -6,7 +6,7 @@ public class DuelJump : PlayerState
 {
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("duel jump start");
+        //Debug.Log("duel jump start");
         context.player.duel2DVelocity.y = (Fix64)Player.duelJumpPower;
     }
 
@@ -30,7 +30,7 @@ public class DuelJump : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("duel jump end");
+        //Debug.Log("duel jump end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

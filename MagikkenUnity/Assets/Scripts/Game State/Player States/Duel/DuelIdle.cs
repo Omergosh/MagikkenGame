@@ -8,7 +8,7 @@ public class DuelIdle : PlayerState
 
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("duel idle start");
+        //Debug.Log("duel idle start");
         moveDeadZone = Fix64.One / new Fix64(20);
         context.player.FaceOtherPlayer(context);
     }
@@ -53,7 +53,7 @@ public class DuelIdle : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("duel idle end" + context.player.playerIndex.ToString());
+        //Debug.Log("duel idle end" + context.player.playerIndex.ToString());
         Debug.Log((Vector2)context.gameState.players[context.player.playerIndex].duel2DPosition);
         //Debug.Log((Vector2)context.gameState.players[0].duel2DPosition);
         //Debug.Log((Vector3)context.gameState.players[0].DuelPosition);

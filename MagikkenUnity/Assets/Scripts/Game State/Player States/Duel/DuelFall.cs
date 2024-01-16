@@ -6,7 +6,7 @@ public class DuelFall : PlayerState
 {
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("duel fall start");
+        //Debug.Log("duel fall start");
     }
 
     public override void OnUpdate(PlayerStateContext context)
@@ -23,7 +23,7 @@ public class DuelFall : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("duel fall end");
+        //Debug.Log("duel fall end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

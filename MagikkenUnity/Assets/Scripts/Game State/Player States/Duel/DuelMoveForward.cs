@@ -8,7 +8,7 @@ public class DuelMoveForward : PlayerState
 
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("duel moveforward start");
+        //Debug.Log("duel moveforward start");
         moveDeadZone = Fix64.One / new Fix64(20);
         context.player.duel2DVelocity = new FixVector2((Fix64)Player.duelMoveSpeed, Fix64.Zero);
     }
@@ -57,7 +57,7 @@ public class DuelMoveForward : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("duel moveforward end");
+        //Debug.Log("duel moveforward end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

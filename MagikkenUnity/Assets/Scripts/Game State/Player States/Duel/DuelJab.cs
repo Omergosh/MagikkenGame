@@ -8,7 +8,7 @@ public class DuelJab : PlayerState
 
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("duel jab start");
+        //Debug.Log("duel jab start");
         //AnimationDataEntry animEntry = GameManager.instance.animationDataLibrary.data.Find(
         //    (a) => a.playerState == nameof(DuelJab)
         //    );
@@ -43,7 +43,7 @@ public class DuelJab : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("duel jab end");
+        //Debug.Log("duel jab end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)

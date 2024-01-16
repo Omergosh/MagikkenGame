@@ -219,6 +219,22 @@ public class GameState
                         if (distanceBetweenOrigins < new Fix64(hitsphere.radius + hurtsphere.radius))
                         {
                             Debug.Log("attack hit!");
+
+                            AttackHitInfo attackHitInfo = new AttackHitInfo
+                            {
+                                attackerIndex = p,
+                                defenderIndex = otherPlayerIndex,
+                                damage = hitsphere.damageValue,
+                            };
+
+                            if(otherPlayerIndex == 0)
+                            {
+                                attackHitsAgainstP1.Add(attackHitInfo);
+                            }
+                            else
+                            {
+                                attackHitsAgainstP2.Add(attackHitInfo);
+                            }
                         }
                     }
                 }

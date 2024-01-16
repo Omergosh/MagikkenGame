@@ -10,7 +10,7 @@ public class FieldMove : PlayerState
 
     public override void OnStart(PlayerStateContext context)
     {
-        Debug.Log("field move start");
+        //Debug.Log("field move start");
         moveInputVector = new FixVector2();
         moveDeadZone = Fix64.One / new Fix64(20);
     }
@@ -42,7 +42,7 @@ public class FieldMove : PlayerState
 
     public override void OnEnd(PlayerStateContext context)
     {
-        Debug.Log("field move end");
+        //Debug.Log("field move end");
     }
 
     public override bool OnPhaseShift(PlayerStateContext context)
