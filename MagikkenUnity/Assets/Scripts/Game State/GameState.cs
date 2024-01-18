@@ -13,6 +13,8 @@ public static class GameStateConstants
     public const int GRAVITY = 6000;
     public const int FRICTION = 1200;
 
+    public const int DEFAULT_MAX_PLAYER_HEALTH = 50;
+
     public const int INPUT_LEFT = (1 << 0);
     public const int INPUT_RIGHT = (1 << 1);
     public const int INPUT_UP = (1 << 2);
@@ -58,10 +60,10 @@ public class GameState
     }
     public void AdvanceFrame(InputSnapshot[] inputs)
     {
-        if(currentPhase == BattlePhase.DUEL_PHASE) { UpdateDuelPhase(inputs); }
+        if (currentPhase == BattlePhase.DUEL_PHASE) { UpdateDuelPhase(inputs); }
         else { UpdateFieldPhase(inputs); }
     }
-    
+
     #region Duel Phase
     private void UpdateDuelPhase(InputSnapshot[] inputs)
     {
@@ -115,7 +117,7 @@ public class GameState
             for (int otherPlayerIndex = 0; otherPlayerIndex < inputs.Length; otherPlayerIndex++)
             {
                 // Guard clause for loop
-                if(p == otherPlayerIndex) {  continue; }
+                if (p == otherPlayerIndex) { continue; }
 
                 ConvertedHitsphereData[] hitspheres = players[p].GetHitspheresWorld(currentPhase);
                 ConvertedHurtsphereData[] hurtspheres = players[otherPlayerIndex].GetHurtspheresWorld();
@@ -133,6 +135,22 @@ public class GameState
                         if (distanceBetweenOrigins < new Fix64(hitsphere.radius + hurtsphere.radius))
                         {
                             Debug.Log("attack hit!");
+
+                            AttackHitInfo attackHitInfo = new AttackHitInfo
+                            {
+                                attackerIndex = p,
+                                defenderIndex = otherPlayerIndex,
+                                damage = hitsphere.damageValue,
+                            };
+
+                            if (otherPlayerIndex == 0)
+                            {
+                                attackHitsAgainstP1.Add(attackHitInfo);
+                            }
+                            else
+                            {
+                                attackHitsAgainstP2.Add(attackHitInfo);
+                            }
                         }
                     }
                 }
@@ -141,6 +159,24 @@ public class GameState
 
 
         // Reaction state updates
+        //  1. Check for hits negated by armor, etc. (future concern)
+        //  2. Check for trades
+        if (attackHitsAgainstP1.Count > 0 && attackHitsAgainstP2.Count > 0)
+        {
+            Debug.Log("Trade! Both players take damage.");
+            players[0].health--;
+            players[1].health--;
+        }
+        //  3. Check for individual hits
+        else if (attackHitsAgainstP1.Count > 0)
+        {
+            players[0].health--;
+        }
+        else if (attackHitsAgainstP2.Count > 0)
+        {
+            players[1].health--;
+        }
+
 
         // Camera update (axis, etc.) (actually for now just skip this step)
         //CalibrateDuelPlane();
@@ -241,11 +277,7 @@ public class GameState
             }
         }
 
-        // Character attack/hit checks
         // Reaction state updates
-
-
-        // (above code copied from Duel Phase)
 
 
         //Debug.Log("Field phase.");

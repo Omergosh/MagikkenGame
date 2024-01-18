@@ -64,7 +64,7 @@ public class Player
     public Player(int newPlayerIndex)
     {
         playerIndex = newPlayerIndex;
-        health = 50;
+        health = GameStateConstants.DEFAULT_MAX_PLAYER_HEALTH;
         stateMachine.state = new DuelIdle();
 
         facingRight = playerIndex == 0 ? true : false;
